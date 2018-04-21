@@ -19,6 +19,8 @@ import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.app.Notification;
+import android.app.NotificationManager;
 import android.app.Service;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -31,11 +33,13 @@ import android.os.Handler;
 import android.os.Message;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.PermissionChecker;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
+import android.widget.RemoteViews;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
@@ -87,6 +91,13 @@ public final class FaceTrackerActivity extends AppCompatActivity {
     // Activity Methods
     //==============================================================================================
 
+    // 알림창 띄우기 위한 변수
+    private NotificationManager notificationManager; // 알람 관리
+    private Notification notification; // 알람
+    private RemoteViews contentView; // 알람 보이도록하는 뷰
+
+
+
     /**
      * Initializes the UI and initiates the creation of a face detector.
      */
@@ -117,6 +128,17 @@ public final class FaceTrackerActivity extends AppCompatActivity {
         mRecorder = new MediaRecorder();
         CCount = 0; // 눈을 감을 때 쓸 카운트
         OCount = 0; // 눈을 뜬 시간을 가지고 올 때 쓰는 카운트
+
+        // 알림창 생성
+        contentView = new RemoteViews(getPackageName(), R.layout.notification);
+        notificationManager = (NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
+
+        notification = new NotificationCompat.Builder(getApplicationContext())
+                .setContent(contentView)
+                .setSmallIcon(R.drawable.icon)
+                .setOngoing(true)
+                .build();
+        notificationManager.notify(111,notification);
     }
 
 
@@ -206,6 +228,9 @@ public final class FaceTrackerActivity extends AppCompatActivity {
             mCameraSource.release();
         }
         stopService(mute); // 혹시 켜져 있으면 프로그램 죽을 경우 서비스 멈춰줌.
+
+        // 알림창 종료
+        notificationManager.cancel(111);
     }
 
     @Override // 이것도 퍼미션
