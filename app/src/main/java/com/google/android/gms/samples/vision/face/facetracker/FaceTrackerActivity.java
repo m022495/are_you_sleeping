@@ -96,8 +96,6 @@ public final class FaceTrackerActivity extends AppCompatActivity {
     private Notification notification; // 알람
     private RemoteViews contentView; // 알람 보이도록하는 뷰
 
-
-
     /**
      * Initializes the UI and initiates the creation of a face detector.
      */
@@ -204,7 +202,7 @@ public final class FaceTrackerActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-
+        mCameraSource.stop();
         startCameraSource();
     }
 
@@ -215,6 +213,11 @@ public final class FaceTrackerActivity extends AppCompatActivity {
     protected void onPause() {
         super.onPause();
         mPreview.stop();
+        try {
+            mCameraSource.start();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -228,7 +231,6 @@ public final class FaceTrackerActivity extends AppCompatActivity {
             mCameraSource.release();
         }
         stopService(mute); // 혹시 켜져 있으면 프로그램 죽을 경우 서비스 멈춰줌.
-
         // 알림창 종료
         notificationManager.cancel(111);
     }
@@ -285,17 +287,16 @@ public final class FaceTrackerActivity extends AppCompatActivity {
         }
 
         if (mCameraSource != null) {
-            camera = new Intent(this, CameraService.class);
-            startService(camera);
-//            try {
-//
-//                mPreview.start(mCameraSource, mGraphicOverlay);
-//
-//            } catch (IOException e) {
-//                Log.e(TAG, "Unable to start camera source.", e);
-//                mCameraSource.release();
-//                mCameraSource = null;
-//            }
+
+            try {
+
+                mPreview.start(mCameraSource, mGraphicOverlay);
+
+            } catch (IOException e) {
+                Log.e(TAG, "Unable to start camera source.", e);
+                mCameraSource.release();
+                mCameraSource = null;
+            }
         }
     }
 
