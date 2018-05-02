@@ -21,7 +21,9 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.Notification;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -37,12 +39,16 @@ import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.PermissionChecker;
 import android.support.v7.app.AppCompatActivity;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
+import android.widget.ImageButton;
 import android.widget.RemoteViews;
+import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
+import com.google.android.gms.common.images.Size;
 import com.google.android.gms.vision.CameraSource;
 import com.google.android.gms.vision.MultiProcessor;
 import com.google.android.gms.vision.Tracker;
@@ -94,7 +100,7 @@ public final class FaceTrackerActivity extends AppCompatActivity {
     // 알림창 띄우기 위한 변수
     private NotificationManager notificationManager; // 알람 관리
     private Notification notification; // 알람
-    private RemoteViews contentView; // 알람 보이도록하는 뷰
+    private RemoteViews notificationView; // 알람 보이도록하는 뷰
 
     /**
      * Initializes the UI and initiates the creation of a face detector.
@@ -127,16 +133,9 @@ public final class FaceTrackerActivity extends AppCompatActivity {
         CCount = 0; // 눈을 감을 때 쓸 카운트
         OCount = 0; // 눈을 뜬 시간을 가지고 올 때 쓰는 카운트
 
-        // 알림창 생성
-        contentView = new RemoteViews(getPackageName(), R.layout.notification);
-        notificationManager = (NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
+        // 알림창 생성 맨 아래에 있음
+        startNotification();
 
-        notification = new NotificationCompat.Builder(getApplicationContext())
-                .setContent(contentView)
-                .setSmallIcon(R.drawable.icon)
-                .setOngoing(true)
-                .build();
-        notificationManager.notify(111,notification);
     }
 
 
@@ -187,8 +186,17 @@ public final class FaceTrackerActivity extends AppCompatActivity {
             Log.w(TAG, "Face detector dependencies are not yet available.");
         } // 작동안하면 로그 띄워줌.
 
+        DisplayMetrics displayMetrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+
+        int width = displayMetrics.widthPixels;
+        int height = displayMetrics.heightPixels;
+        Log.d("cosmos", ""+width+","+height);
+//        Size size = mCameraSource.getPreviewSize();
+//        Log.d("cosmos","size = "+size.getWidth()+","+size.getHeight());
+
         mCameraSource = new CameraSource.Builder(context, detector)
-                .setRequestedPreviewSize(640, 480)
+                .setRequestedPreviewSize(width,height)
                 .setFacing(CameraSource.CAMERA_FACING_FRONT)
                 .setAutoFocusEnabled(true)
                 .setRequestedFps(15.0f)
@@ -232,7 +240,7 @@ public final class FaceTrackerActivity extends AppCompatActivity {
         }
         stopService(mute); // 혹시 켜져 있으면 프로그램 죽을 경우 서비스 멈춰줌.
         // 알림창 종료
-        notificationManager.cancel(111);
+        notificationManager.cancelAll();
     }
 
     @Override // 이것도 퍼미션
@@ -459,4 +467,80 @@ public final class FaceTrackerActivity extends AppCompatActivity {
         });
         thread.start();
     }
+
+    // onCreate에서 불려져서 알림창을 생성함
+    private void startNotification(){
+        notificationManager = (NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
+
+        notification = new Notification(R.drawable.icon, null,System.currentTimeMillis());
+
+        notificationView = new RemoteViews(getPackageName(),R.layout.notification);
+
+        // 알림창을 눌렀을때 (버튼이 아닌 외부) FaceTracker 실행
+        Intent notificationIntent = new Intent(this, FaceTrackerActivity.class);
+        PendingIntent mPendingIntent = PendingIntent.getActivity(this,0,notificationIntent,0);
+
+        // ▷ 버튼을 눌렀을때
+        Intent startIntent = new Intent(this, ButtonListener.class);
+        startIntent.putExtra("key","start");
+        PendingIntent pStartIntent = PendingIntent.getBroadcast(this,1,startIntent,0);
+
+        // || 버튼 눌렀을떄
+        Intent pauseIntent = new Intent(this, ButtonListener.class);
+        pauseIntent.putExtra("key","pause");
+        PendingIntent pPauseIntent = PendingIntent.getBroadcast(this,2,pauseIntent,0);
+
+        // X 버튼 눌렀을때
+        Intent closeIntent = new Intent(this, ButtonListener.class);
+        closeIntent.putExtra("key","close");
+        PendingIntent pCloseIntent = PendingIntent.getBroadcast(this,3,closeIntent,0);
+
+//        Intent lockIntent = new Intent(this, FaceTrackerActivity.class);
+//        lockIntent.putExtra("key", "lock");
+//        PendingIntent pLockIntent = PendingIntent.getBroadcast(this,4,lockIntent,0);
+
+        // 알림 설정과 intent 부여
+        notification.contentView = notificationView;
+        notification.contentIntent = mPendingIntent;
+        notification.flags |= Notification.FLAG_NO_CLEAR;
+
+        // 버튼이 눌릴때 불려질 PendingIntent 설정
+        notificationView.setOnClickPendingIntent(R.id.start, pStartIntent);
+        notificationView.setOnClickPendingIntent(R.id.pause, pPauseIntent);
+        notificationView.setOnClickPendingIntent(R.id.close, pCloseIntent);
+//        notificationView.setOnClickPendingIntent(R.id.lock, pLockIntent);
+
+        // 알림 실행
+        notificationManager.notify(1,notification);
+    }
+
+    // manifests에 명시할때 주의할 것
+    public static class ButtonListener extends BroadcastReceiver{
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String st = intent.getStringExtra("key");
+            Log.d("cosmos","receive data "+st);
+
+            switch (st) {
+                case "start":
+                    Log.d("cosmos", "start test ok");
+                    Toast.makeText(context, "start test ok", Toast.LENGTH_SHORT).show();
+                    break;
+                case "pause":
+                    Log.d("cosmos", "pause test ok");
+                    Toast.makeText(context, "pause test ok", Toast.LENGTH_SHORT).show();
+                    break;
+                case "close":
+                    Log.d("cosmos", "close test ok");
+                    Toast.makeText(context, "close test ok", Toast.LENGTH_SHORT).show();
+                    break;
+                default:
+                    Toast.makeText(context, "test ok", Toast.LENGTH_SHORT).show();
+                    break;
+            }
+
+        }
+    }
+
 }
+
