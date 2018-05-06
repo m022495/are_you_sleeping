@@ -47,6 +47,7 @@ public class CameraSourcePreview extends ViewGroup {
 
         mSurfaceView = new SurfaceView(context);
         mSurfaceView.getHolder().addCallback(new SurfaceCallback());
+
         addView(mSurfaceView);
     }
 
@@ -129,6 +130,7 @@ public class CameraSourcePreview extends ViewGroup {
         if (mCameraSource != null) {
             Size size = mCameraSource.getPreviewSize();
             if (size != null) {
+
                 width = size.getWidth();
                 height = size.getHeight();
             }

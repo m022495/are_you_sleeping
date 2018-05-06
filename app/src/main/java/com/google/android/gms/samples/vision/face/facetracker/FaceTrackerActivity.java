@@ -66,7 +66,7 @@ import java.io.IOException;
 public final class FaceTrackerActivity extends AppCompatActivity {
     private static final String TAG = "FaceTracker";
 
-    private CameraSource mCameraSource = null;
+    private static CameraSource mCameraSource = null;
 
     public static CameraSourcePreview mPreview; // 카메라 프리 뷰
     public static  GraphicOverlay mGraphicOverlay; // 프리뷰 위에 그래픽 오버레이를 띄우나봄
@@ -524,15 +524,22 @@ public final class FaceTrackerActivity extends AppCompatActivity {
             switch (st) {
                 case "start":
                     Log.d("cosmos", "start test ok");
-                    Toast.makeText(context, "start test ok", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(context, "CameraSource on", Toast.LENGTH_SHORT).show();
+                    mPreview.stop();
+                    try {
+                        mCameraSource.start();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                     break;
                 case "pause":
                     Log.d("cosmos", "pause test ok");
-                    Toast.makeText(context, "pause test ok", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(context, "CameraSource off", Toast.LENGTH_SHORT).show();
+                    mCameraSource.stop();
                     break;
                 case "close":
                     Log.d("cosmos", "close test ok");
-                    Toast.makeText(context, "close test ok", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(context, "close button test", Toast.LENGTH_SHORT).show();
                     break;
                 default:
                     Toast.makeText(context, "test ok", Toast.LENGTH_SHORT).show();
