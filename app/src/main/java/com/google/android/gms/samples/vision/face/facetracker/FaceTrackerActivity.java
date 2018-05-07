@@ -42,6 +42,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.RemoteViews;
 import android.widget.Toast;
@@ -70,19 +71,19 @@ public final class FaceTrackerActivity extends AppCompatActivity {
 
     public static CameraSourcePreview mPreview; // 카메라 프리 뷰
     public static  GraphicOverlay mGraphicOverlay; // 프리뷰 위에 그래픽 오버레이를 띄우나봄
-
-    private Intent camera;
+    public static boolean isRecorded;
 
     // 알람을 위한 것들. --> update부분에서는 계속 갱신이 되는 문제 때문에 그냥 전역? 비슷하게 선언.
     public static Intent mute;
     private SharedPreferences.Editor editor;
     private int isMute; // 처음 시작할 때 음악이 켜져있는 불상사가 있을 경우 바로 끔
 
+
     // 데시벨을 위한 것들
-    private MediaRecorder mRecorder; // 목소리 녹음
+    private static MediaRecorder mRecorder; // 목소리 녹음
     private AlertDialog ad; // 다이어 그램인데 일단 아직 안씀.
     private String curVal; // 현재 볼륨
-    private Thread thread; // 데시벨을 듣기위해 쓰레드를 돌림.
+    private static Thread thread; // 데시벨을 듣기위해 쓰레드를 돌림.
     float volume = 10000; // 현재 볼륨을 받기 위해 쓰레드에서 쓰는 것
     private int CCount; // 눈 깜은 거 측정하는 카운트
     private int OCount; // 눈 뜬거 측정하는 카운트
@@ -101,7 +102,8 @@ public final class FaceTrackerActivity extends AppCompatActivity {
     private NotificationManager notificationManager; // 알람 관리
     private Notification notification; // 알람
     private RemoteViews notificationView; // 알람 보이도록하는 뷰
-
+    public static boolean isForeGround = true;
+    public static Activity activity;
     /**
      * Initializes the UI and initiates the creation of a face detector.
      */
@@ -109,7 +111,7 @@ public final class FaceTrackerActivity extends AppCompatActivity {
     public void onCreate(Bundle icicle) {
         super.onCreate(icicle);
         setContentView(R.layout.main);
-
+        activity = this;
         mPreview = (CameraSourcePreview) findViewById(R.id.preview);
         // mPreview.setSystemUiVisibility();
         //mPreview.setVisibility(View.GONE);
@@ -132,9 +134,9 @@ public final class FaceTrackerActivity extends AppCompatActivity {
         mRecorder = new MediaRecorder();
         CCount = 0; // 눈을 감을 때 쓸 카운트
         OCount = 0; // 눈을 뜬 시간을 가지고 올 때 쓰는 카운트
-
+        isRecorded = false;
         // 알림창 생성 맨 아래에 있음
-        startNotification();
+
 
     }
 
@@ -201,7 +203,7 @@ public final class FaceTrackerActivity extends AppCompatActivity {
                 .setAutoFocusEnabled(true)
                 .setRequestedFps(15.0f)
                 .build(); // 카메라 소스 창조.
-
+        startNotification();
     }
 
     /**
@@ -212,6 +214,8 @@ public final class FaceTrackerActivity extends AppCompatActivity {
         super.onResume();
         mCameraSource.stop();
         startCameraSource();
+        isForeGround = true;
+        notificationManager.cancelAll();
     }
 
     /**
@@ -222,7 +226,9 @@ public final class FaceTrackerActivity extends AppCompatActivity {
         super.onPause();
         mPreview.stop();
         try {
+            startNotification();
             mCameraSource.start();
+            isForeGround = false;
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -364,6 +370,7 @@ public final class FaceTrackerActivity extends AppCompatActivity {
                 isThreadRun = true; // 쓰레드를 시작시키게 함.
                 //dialogDecibel();
                 startListenAudio(); // 오디오 녹음과 데시벨 측정 시작.
+                isRecorded = true;
             }
             //눈감는 상황에는 오픈 카운트 아예 측정 안함.
             else if (face.getIsRightEyeOpenProbability() < 0.5 && face.getIsRightEyeOpenProbability() < 0.5 && isMute == 1 && CCount < 30) {
@@ -421,6 +428,7 @@ public final class FaceTrackerActivity extends AppCompatActivity {
                     CCount = 0;
                     OCount = 0;
                     stopService(mute); //꺼줌.
+                    isRecorded = false;
                     if (thread != null) { // 스레드가 널이 아니면
                         isThreadRun = false; // false 주고 스레드 죽임.
                         thread = null;
@@ -433,14 +441,6 @@ public final class FaceTrackerActivity extends AppCompatActivity {
         }
     };
 
-    //다이어로그 일단 놔둠.
-    public void dialogDecibel() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this.getApplicationContext());
-        ad = builder.create();
-        ad.setTitle("60데시벨이상 고함치세요");
-        ad.setMessage("데시벨~");
-        ad.show();
-    }
 
     // 오디오 시작.
     private void startListenAudio() {
@@ -476,22 +476,24 @@ public final class FaceTrackerActivity extends AppCompatActivity {
 
         notificationView = new RemoteViews(getPackageName(),R.layout.notification);
 
+        ButtonListener buttonListener = new ButtonListener();
+
         // 알림창을 눌렀을때 (버튼이 아닌 외부) FaceTracker 실행
         Intent notificationIntent = new Intent(this, FaceTrackerActivity.class);
         PendingIntent mPendingIntent = PendingIntent.getActivity(this,0,notificationIntent,0);
 
         // ▷ 버튼을 눌렀을때
-        Intent startIntent = new Intent(this, ButtonListener.class);
+        Intent startIntent = new Intent(this, buttonListener.getClass());
         startIntent.putExtra("key","start");
         PendingIntent pStartIntent = PendingIntent.getBroadcast(this,1,startIntent,0);
 
         // || 버튼 눌렀을떄
-        Intent pauseIntent = new Intent(this, ButtonListener.class);
+        Intent pauseIntent = new Intent(this, buttonListener.getClass());
         pauseIntent.putExtra("key","pause");
         PendingIntent pPauseIntent = PendingIntent.getBroadcast(this,2,pauseIntent,0);
 
         // X 버튼 눌렀을때
-        Intent closeIntent = new Intent(this, ButtonListener.class);
+        Intent closeIntent = new Intent(this, buttonListener.getClass());
         closeIntent.putExtra("key","close");
         PendingIntent pCloseIntent = PendingIntent.getBroadcast(this,3,closeIntent,0);
 
@@ -528,6 +530,10 @@ public final class FaceTrackerActivity extends AppCompatActivity {
                     mPreview.stop();
                     try {
                         mCameraSource.start();
+                        if(isRecorded == true){
+                            // startService(mute);
+                            mRecorder.start();
+                        }
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -535,11 +541,18 @@ public final class FaceTrackerActivity extends AppCompatActivity {
                 case "pause":
                     Log.d("cosmos", "pause test ok");
                     Toast.makeText(context, "CameraSource off", Toast.LENGTH_SHORT).show();
-                    mCameraSource.stop();
+                    if(isRecorded == false){
+                        mCameraSource.stop();
+                    }else if(isRecorded == true){
+                        Toast.makeText(context, "shut down the alarm first", Toast.LENGTH_SHORT).show();
+//                        mRecorder.stop();
+                        //stopService(mute);
+                    }
                     break;
                 case "close":
                     Log.d("cosmos", "close test ok");
                     Toast.makeText(context, "close button test", Toast.LENGTH_SHORT).show();
+                    activity.finish();
                     break;
                 default:
                     Toast.makeText(context, "test ok", Toast.LENGTH_SHORT).show();
