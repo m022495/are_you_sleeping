@@ -45,6 +45,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.RemoteViews;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -65,6 +66,8 @@ import java.io.IOException;
  * overlay graphics to indicate the position, size, and ID of each face.
  */
 public final class FaceTrackerActivity extends AppCompatActivity {
+
+
     private static final String TAG = "FaceTracker";
 
     private static CameraSource mCameraSource = null;
@@ -94,6 +97,10 @@ public final class FaceTrackerActivity extends AppCompatActivity {
     // permission request codes need to be < 256
     private static final int RC_HANDLE_CAMERA_PERM = 2;
     private static final int RC_HANDLE_AUDIO_PERM = 3;
+
+    // 추가된 옵션값
+    private String wake;
+    private String shut;
     //==============================================================================================
     // Activity Methods
     //==============================================================================================
@@ -137,9 +144,28 @@ public final class FaceTrackerActivity extends AppCompatActivity {
         isRecorded = false;
         // 알림창 생성 맨 아래에 있음
 
+        wake = opt.getString("wake","진동"); // 졸음감지 이후 깨우는 방법, 디폴트는 진동
+        shut = opt.getString("shut", "소리지르기"); // 알람 끄는법, 디폴트는 소리지르기
+
 
     }
 
+    /**************************************************************************************************************/
+    //여기서부터 임시로 만든 부분. 추후 프로그램 제작시 지울것
+    //옵션값이 저장됨을 확인하기 위해 일시적으로 만든 디버그용 텍스트 설정
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+        SharedPreferences opt = getSharedPreferences("Option", MODE_PRIVATE);
+        wake = opt.getString("wake","설정되지 않음"); // 졸음감지 이후 깨우는 방법, 디폴트는 진동
+        shut = opt.getString("shut", "설정되지 않음"); // 알람 끄는법, 디폴트는 소리지르기
+        TextView text = (TextView)findViewById(R.id.wakeShow);
+        text.setText("깨우는 방법" + wake);
+        text = (TextView)findViewById(R.id.shutShow);
+        text.setText("끄는 방법" + shut);
+    }
+    /****************************************************************************************************************/
 
     /**
      * Handles the requesting of the camera permission.  This includes
@@ -413,6 +439,11 @@ public final class FaceTrackerActivity extends AppCompatActivity {
         public void onDone() {
             mOverlay.remove(mFaceGraphic);
         }
+    }
+
+    public void startOption(View view){
+        Intent intent1 = new Intent(this, OptionActivity.class);
+        startActivity(intent1);
     }
 
     // 데시벨 관련 소스 시작
