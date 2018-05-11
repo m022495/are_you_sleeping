@@ -95,8 +95,8 @@ public final class FaceTrackerActivity extends AppCompatActivity {
     private boolean isThreadRun = true;
     private static final int RC_HANDLE_GMS = 9001;
     // permission request codes need to be < 256
-    private static final int RC_HANDLE_CAMERA_PERM = 2;
-    private static final int RC_HANDLE_AUDIO_PERM = 3;
+    // private static final int RC_HANDLE_CAMERA_PERM = 3;
+    private static final int RC_HANDLE_AUDIO_PERM = 2;
 
     // 추가된 옵션값
     private String wake;
@@ -126,13 +126,17 @@ public final class FaceTrackerActivity extends AppCompatActivity {
 
         // Check for the camera permission before accessing the camera.  If the
         // permission is not granted yet, request permission.
-        int rc = ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA);
-        int rc1 = ActivityCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO);
-        if (rc == PackageManager.PERMISSION_GRANTED && rc1 == PackageManager.PERMISSION_GRANTED) {
-            createCameraSource();
-        } else {
-            requestCameraPermission();
+        //int rc = ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA);
+
+        createCameraSource();
+
+        int rc = ActivityCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO);
+        if (rc != PackageManager.PERMISSION_GRANTED) {
+            requestAudioPermission();
         }
+//        else {
+//            requestCameraPermission();
+//        }
         mute = new Intent(this, AlarmService.class);
 
         SharedPreferences opt = getSharedPreferences("Option", MODE_PRIVATE); // 이전거 가져오나봐 자세한건 잘 모르겠다.
@@ -172,24 +176,43 @@ public final class FaceTrackerActivity extends AppCompatActivity {
      * showing a "Snackbar" message of why the permission is needed then
      * sending the request.
      */
-    private void requestCameraPermission() { // 귀찮아서 이름은 안바꿨는데 이게 permission 종합적으로 받아옴.
-        Log.w(TAG, "Camera permission is not granted. Requesting permission");
+    // 기존 두개 퍼미션 받는거에서 카메라는 로딩에서 받았고, Audio만 받게 변경
+    private void requestAudioPermission() {
+        // Log.w(TAG, "Camera permission is not granted. Requesting permission");
 
-        final String[] permissions = new String[]{Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO};
-        // 오디오랑 카메라 퍼미션 받자
+        final String[] permissions = new String[]{Manifest.permission.RECORD_AUDIO};
+        // 버전에 맞춰서 오디오 퍼미션 요청
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            for (String permission : permissions) {
-                int result = PermissionChecker.checkCallingOrSelfPermission(this, permission);
-                if (result == PermissionChecker.PERMISSION_GRANTED) ;
+            int audioPermissionResult = checkSelfPermission(Manifest.permission.RECORD_AUDIO);
+
+            if( audioPermissionResult == PackageManager.PERMISSION_DENIED) {
+                if (shouldShowRequestPermissionRationale(Manifest.permission.RECORD_AUDIO)) {
+                    android.support.v7.app.AlertDialog.Builder dialog = new android.support.v7.app.AlertDialog.Builder(FaceTrackerActivity.this);
+                    dialog.setTitle("권한이 필요합니다.")
+                            .setMessage("이 어플리케이션은 오디오 권한을 필요로 합니다. 권한이 없을시 일부 기능이 동작하지 않을 수 있습니다. 계속 하시겠습니까?")
+                            .setPositiveButton("네", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialogInterface, int i) {
+                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                                        requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO}, RC_HANDLE_AUDIO_PERM);
+                                    }
+                                }
+                            })
+                            .setNegativeButton("아니오", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialogInterface, int i) {
+                                    Toast.makeText(FaceTrackerActivity.this, "녹음 기능을 사용하지 않습니다.", Toast.LENGTH_SHORT).show();
+                                }
+                            })
+                            .create()
+                            .show();
+                }
                 else {
-                    ActivityCompat.requestPermissions(this, permissions, 1);
+                    requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO}, RC_HANDLE_AUDIO_PERM);
                 }
             }
         }
-        if (Build.VERSION.SDK_INT >= 23 &&
-                ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED &&
-                ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED)
-            return;
+
     }
 
 
@@ -238,10 +261,14 @@ public final class FaceTrackerActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        mCameraSource.stop();
+        if(mCameraSource != null) {
+            mCameraSource.stop();
+        }
         startCameraSource();
         isForeGround = true;
-        notificationManager.cancelAll();
+        if(notificationManager != null) {
+            notificationManager.cancelAll();
+        }
     }
 
     /**
@@ -275,35 +302,47 @@ public final class FaceTrackerActivity extends AppCompatActivity {
         notificationManager.cancelAll();
     }
 
-    @Override // 이것도 퍼미션
+    @Override // 퍼미션을 요청했을 경우 여기서 반환값을 만들어 내줌.
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        if (requestCode != RC_HANDLE_CAMERA_PERM) {
-            Log.d(TAG, "Got unexpected permission result: " + requestCode);
-            super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-            return;
-        }
+//        if (requestCode != RC_HANDLE_CAMERA_PERM) {
+//            Log.d(TAG, "Got unexpected permission result: " + requestCode);
+//            super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+//            return;
+//        }
 
-        if (grantResults.length != 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            Log.d(TAG, "Camera permission granted - initialize the camera source");
-            // we have permission, so create the camerasource
-            createCameraSource();
-            return;
-        }
-
-        Log.e(TAG, "Permission not granted: results len = " + grantResults.length +
-                " Result code = " + (grantResults.length > 0 ? grantResults[0] : "(empty)"));
-
-        DialogInterface.OnClickListener listener = new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int id) {
-                finish();
+        if(requestCode == RC_HANDLE_AUDIO_PERM){
+            if(grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
+                if(ActivityCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
+                        ==PackageManager.PERMISSION_GRANTED) {
+                    Toast.makeText(FaceTrackerActivity.this,"녹음 권한을 승인했습니다.",Toast.LENGTH_SHORT).show();
+                }
             }
-        };
-
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Face Tracker sample")
-                .setMessage(R.string.no_camera_permission)
-                .setPositiveButton(R.string.ok, listener)
-                .show();
+            else {
+                Toast.makeText(FaceTrackerActivity.this,"녹음 권한을 거부했습니다.",Toast.LENGTH_SHORT).show();
+            }
+        }
+//
+//        if (grantResults.length != 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+//            Log.d(TAG, "Camera permission granted - initialize the camera source");
+//            // we have permission, so create the camerasource
+//            createCameraSource();
+//            return;
+//        }
+//
+//        Log.e(TAG, "Permission not granted: results len = " + grantResults.length +
+//                " Result code = " + (grantResults.length > 0 ? grantResults[0] : "(empty)"));
+//
+//        DialogInterface.OnClickListener listener = new DialogInterface.OnClickListener() {
+//            public void onClick(DialogInterface dialog, int id) {
+//                finish();
+//            }
+//        };
+//
+//        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+//        builder.setTitle("Face Tracker sample")
+//                .setMessage(R.string.no_camera_permission)
+//                .setPositiveButton(R.string.ok, listener)
+//                .show();
     }
 
     //==============================================================================================
