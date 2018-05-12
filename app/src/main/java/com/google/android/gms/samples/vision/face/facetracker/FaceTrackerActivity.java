@@ -61,6 +61,7 @@ import com.google.android.gms.samples.vision.face.facetracker.ui.camera.CameraSo
 import com.google.android.gms.samples.vision.face.facetracker.ui.camera.GraphicOverlay;
 
 import java.io.IOException;
+import java.util.regex.Pattern;
 
 /**
  * Activity for the face tracker app.  This app detects faces with the rear facing camera, and draws
@@ -80,7 +81,7 @@ public final class FaceTrackerActivity extends AppCompatActivity implements Sens
     // 알람을 위한 것들. --> update부분에서는 계속 갱신이 되는 문제 때문에 그냥 전역? 비슷하게 선언.
     public static Intent mute;
     private SharedPreferences.Editor editor;
-    private int isMute; // 처음 시작할 때 음악이 켜져있는 불상사가 있을 경우 바로 끔
+    public static int isMute; // 처음 시작할 때 음악이 켜져있는 불상사가 있을 경우 바로 끔
 
 
     // 데시벨을 위한 것들
@@ -89,7 +90,7 @@ public final class FaceTrackerActivity extends AppCompatActivity implements Sens
     private String curVal; // 현재 볼륨
     private static Thread thread; // 데시벨을 듣기위해 쓰레드를 돌림.
     float volume = 10000; // 현재 볼륨을 받기 위해 쓰레드에서 쓰는 것
-    private int CCount; // 눈 깜은 거 측정하는 카운트
+    public static int CCount; // 눈 깜은 거 측정하는 카운트
     private int OCount; // 눈 뜬거 측정하는 카운트
 
     private boolean bListener = true;
@@ -104,7 +105,7 @@ public final class FaceTrackerActivity extends AppCompatActivity implements Sens
     private String shut;
 
     //진동
-    Vibrator vibrator;
+    public static Vibrator vibrator;
     // sos패턴으로 진동
     int dot = 200;
     int dash = 500;
@@ -528,6 +529,10 @@ public final class FaceTrackerActivity extends AppCompatActivity implements Sens
                }else if(shut.equals("흔들기")){
                    if (accelerormeterSensor != null)
                        sensorManager.registerListener(sensorEventListener,accelerormeterSensor,SensorManager.SENSOR_DELAY_GAME);
+               }else if(shut.equals("패턴인식")){
+                   Intent intent = new Intent("com.google.android.gms.samples.vision.face.facetracker.pattern");
+                   intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);   // 이거 안해주면 안됨
+                   startActivity(intent);
                }
 
             }

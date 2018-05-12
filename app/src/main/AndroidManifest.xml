@@ -59,11 +59,23 @@
             android:enabled="true"
             android:exported="true" />
 
-        <activity android:name=".OptionActivity" />
+        <activity
+            android:name=".OptionActivity"
+
+            />
         <activity
             android:name=".PopupActivity"
             android:theme="@style/Theme.AppCompat.Dialog"></activity>
-        <activity android:name=".PatternActivity"></activity>
+        <activity
+            android:name=".PatternActivity"
+            android:theme="@style/Theme.AppCompat.Dialog"
+            android:launchMode="singleInstance"
+            >
+            <intent-filter>
+                <action android:name="com.google.android.gms.samples.vision.face.facetracker.pattern"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
+        </activity>
     </application>
 
 </manifest>

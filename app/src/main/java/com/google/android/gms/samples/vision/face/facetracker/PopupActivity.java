@@ -32,7 +32,7 @@ public class PopupActivity extends AppCompatActivity {
                 opt1.setText("진동");
                 opt2.setText("음악");
                 opt3.setText("귀신소리");
-                opt4.setText(" ");
+                opt4.setVisibility(View.INVISIBLE);
                 break;
             case "shut":
                 opt1.setText("소리지르기");
@@ -122,6 +122,12 @@ public class PopupActivity extends AppCompatActivity {
         switch (data){
             case "shut":
                 editor.putString("shut", "패턴인식");
+                String a  = opt.getString("pattern",null);
+                if(a == null){
+                    Intent intent = new Intent(this, PatternActivity.class);
+                    intent.putExtra("option", "wake");
+                    startActivityForResult(intent, 1);
+                }
                 break;
             default:
                 finish();

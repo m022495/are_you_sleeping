@@ -2,12 +2,12 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical"
     android:layout_width="300dp"
-    android:layout_height="400dp">
+    android:layout_height="300dp">
     <com.eftimoff.patternview.PatternView
         xmlns:patternview="http://schemas.android.com/apk/res-auto"
         android:id="@+id/patternView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:layout_centerInParent="true"
         patternview:gridColumns="4"
         patternview:gridRows="4" />
