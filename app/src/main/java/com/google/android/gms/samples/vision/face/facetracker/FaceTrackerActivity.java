@@ -29,28 +29,29 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.support.design.widget.Snackbar;
+import android.os.Vibrator;
+
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.NotificationCompat;
-import android.support.v4.content.ContextCompat;
-import android.support.v4.content.PermissionChecker;
 import android.support.v7.app.AppCompatActivity;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
-import android.widget.ImageButton;
+
 import android.widget.RemoteViews;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
-import com.google.android.gms.common.images.Size;
+
 import com.google.android.gms.vision.CameraSource;
 import com.google.android.gms.vision.MultiProcessor;
 import com.google.android.gms.vision.Tracker;
@@ -65,7 +66,7 @@ import java.io.IOException;
  * Activity for the face tracker app.  This app detects faces with the rear facing camera, and draws
  * overlay graphics to indicate the position, size, and ID of each face.
  */
-public final class FaceTrackerActivity extends AppCompatActivity {
+public final class FaceTrackerActivity extends AppCompatActivity implements SensorEventListener {
 
 
     private static final String TAG = "FaceTracker";
@@ -101,6 +102,42 @@ public final class FaceTrackerActivity extends AppCompatActivity {
     // 추가된 옵션값
     private String wake;
     private String shut;
+
+    //진동
+    Vibrator vibrator;
+    // sos패턴으로 진동
+    int dot = 200;
+    int dash = 500;
+    int short_gap = 200;
+    int medium_gap = 500;
+    int long_gap = 1000;
+    long[] pattern = {
+            0, //즉시시작
+            dot, short_gap, dot, short_gap, dot, //s
+            medium_gap, dash, short_gap, dash, short_gap, dash, //o
+            medium_gap, dot, short_gap, dot, short_gap, dot, //s
+            long_gap
+    };
+
+    // 흔들기
+    private long lastTime;
+    private float speed;
+    private float lastX;
+    private float lastY;
+    private float lastZ;
+    private float x, y, z;
+
+    private static final int SHAKE_THRESHOLD = 8000; // 흔드는 속도
+    private static final int DATA_X = SensorManager.DATA_X;
+    private static final int DATA_Y = SensorManager.DATA_Y;
+    private static final int DATA_Z = SensorManager.DATA_Z;
+
+    private SensorManager sensorManager;
+    private Sensor accelerormeterSensor;
+    private int shakeCount = 0;
+    private SensorEventListener sensorEventListener;
+
+
     //==============================================================================================
     // Activity Methods
     //==============================================================================================
@@ -150,12 +187,58 @@ public final class FaceTrackerActivity extends AppCompatActivity {
 
         wake = opt.getString("wake","진동"); // 졸음감지 이후 깨우는 방법, 디폴트는 진동
         shut = opt.getString("shut", "소리지르기"); // 알람 끄는법, 디폴트는 소리지르기
+        // 흔들기 센서 초기화
+        sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+        accelerormeterSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        // 흔들기 센서 초기화
+        vibrator = (Vibrator)getSystemService(Context.VIBRATOR_SERVICE);
+        sensorEventListener = new SensorEventListener() {
+            @Override
+            public void onSensorChanged(SensorEvent event) {
+                if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+                    Toast.makeText(FaceTrackerActivity.this, "shake", Toast.LENGTH_SHORT).show();
+                    long currentTime = System.currentTimeMillis();
+                    long gabOfTime = (currentTime - lastTime);
+                    if (gabOfTime > 100) {
+                        lastTime = currentTime;
+                        x = event.values[SensorManager.DATA_X];
+                        y = event.values[SensorManager.DATA_Y];
+                        z = event.values[SensorManager.DATA_Z];
 
+                        speed = Math.abs(x + y + z - lastX - lastY - lastZ) / gabOfTime * 10000;
+
+
+                        lastX = event.values[DATA_X];
+                        lastY = event.values[DATA_Y];
+                        lastZ = event.values[DATA_Z];
+                    }
+
+                    if (speed > SHAKE_THRESHOLD) {
+                        shakeCount = shakeCount+1;
+                        if(shakeCount>20){
+                            shakeCount = 0;
+                            if(wake.equals("음악")) {
+                                stopService(mute); //꺼줌.
+                            }else if(wake.equals("진동")){
+                                vibrator.cancel();
+                            }
+                            if (sensorManager != null)
+                                sensorManager.unregisterListener(sensorEventListener);
+                        }
+                    }
+
+                }
+            }
+
+            @Override
+            public void onAccuracyChanged(Sensor sensor, int accuracy) {
+
+            }
+        };
 
     }
 
-    /**************************************************************************************************************/
-    //여기서부터 임시로 만든 부분. 추후 프로그램 제작시 지울것
+     //여기서부터 임시로 만든 부분. 추후 프로그램 제작시 지울것
     //옵션값이 저장됨을 확인하기 위해 일시적으로 만든 디버그용 텍스트 설정
     @Override
     protected void onStart() {
@@ -169,13 +252,7 @@ public final class FaceTrackerActivity extends AppCompatActivity {
         text = (TextView)findViewById(R.id.shutShow);
         text.setText("끄는 방법" + shut);
     }
-    /****************************************************************************************************************/
 
-    /**
-     * Handles the requesting of the camera permission.  This includes
-     * showing a "Snackbar" message of why the permission is needed then
-     * sending the request.
-     */
     // 기존 두개 퍼미션 받는거에서 카메라는 로딩에서 받았고, Audio만 받게 변경
     private void requestAudioPermission() {
         // Log.w(TAG, "Camera permission is not granted. Requesting permission");
@@ -264,6 +341,7 @@ public final class FaceTrackerActivity extends AppCompatActivity {
         if(mCameraSource != null) {
             mCameraSource.stop();
         }
+
         startCameraSource();
         isForeGround = true;
         if(notificationManager != null) {
@@ -300,6 +378,7 @@ public final class FaceTrackerActivity extends AppCompatActivity {
         stopService(mute); // 혹시 켜져 있으면 프로그램 죽을 경우 서비스 멈춰줌.
         // 알림창 종료
         notificationManager.cancelAll();
+        vibrator.cancel();
     }
 
     @Override // 퍼미션을 요청했을 경우 여기서 반환값을 만들어 내줌.
@@ -431,11 +510,26 @@ public final class FaceTrackerActivity extends AppCompatActivity {
             if (face.getIsRightEyeOpenProbability() < 0.5 && face.getIsRightEyeOpenProbability() < 0.5 && isMute == 1 && CCount == 30) {
                 CCount = CCount + 1; // 얘를 1 상승 시켜서 31으로 만듦. 0으로 만들경우 밑의 경우에 걸려
                 OCount = 0; // open카운트는 0으로 만들어버림.
-                startService(mute); // 알람 시작
-                isThreadRun = true; // 쓰레드를 시작시키게 함.
-                //dialogDecibel();
-                startListenAudio(); // 오디오 녹음과 데시벨 측정 시작.
-                isRecorded = true;
+                if(wake.equals("음악")){
+
+                    startService(mute); // 알람 시작
+
+                    //dialogDecibel();
+                }else if(wake.equals("진동")){
+
+                    vibrator.vibrate(pattern,0);
+                }
+
+               if(shut.equals("소리지르기")){
+                   isRecorded = true;
+                   isThreadRun = true; // 녹음 쓰레드를 시작시키게 함.
+                   startListenAudio(); // 오디오 녹음과 데시벨 측정 시작.
+
+               }else if(shut.equals("흔들기")){
+                   if (accelerormeterSensor != null)
+                       sensorManager.registerListener(sensorEventListener,accelerormeterSensor,SensorManager.SENSOR_DELAY_GAME);
+               }
+
             }
             //눈감는 상황에는 오픈 카운트 아예 측정 안함.
             else if (face.getIsRightEyeOpenProbability() < 0.5 && face.getIsRightEyeOpenProbability() < 0.5 && isMute == 1 && CCount < 30) {
@@ -454,6 +548,9 @@ public final class FaceTrackerActivity extends AppCompatActivity {
             else if (isMute == 0) {
                 stopService(mute);
                 isMute = 1;
+                if(mRecorder!=null){
+                    mRecorder.stop();
+                }
             } else {
 
             }
@@ -497,8 +594,15 @@ public final class FaceTrackerActivity extends AppCompatActivity {
                     //  ad.cancel();
                     CCount = 0;
                     OCount = 0;
-                    stopService(mute); //꺼줌.
-                    isRecorded = false;
+                    if(wake.equals("음악")) {
+                        isRecorded = false;
+                        stopService(mute); //꺼줌.
+                    }else if(wake.equals("진동")){
+                        isRecorded = false;
+                        vibrator.cancel();
+                    }
+
+
                     if (thread != null) { // 스레드가 널이 아니면
                         isThreadRun = false; // false 주고 스레드 죽임.
                         thread = null;
@@ -585,6 +689,19 @@ public final class FaceTrackerActivity extends AppCompatActivity {
         // 알림 실행
         notificationManager.notify(1,notification);
     }
+
+    // shake 센서 변동시 불리는 메소드
+    @Override
+    public void onSensorChanged(SensorEvent event) {
+
+
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {
+
+    }
+
 
     // manifests에 명시할때 주의할 것
     public static class ButtonListener extends BroadcastReceiver{

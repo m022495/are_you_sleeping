@@ -3,7 +3,7 @@
     package="com.google.android.gms.samples.vision.face.facetracker"
     android:installLocation="auto"
     android:versionCode="1"
-    android:versionName="1" >
+    android:versionName="1">
 
     <uses-sdk
         android:minSdkVersion="9"
@@ -16,13 +16,14 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.VIBRATE" />
 
     <application
         android:allowBackup="true"
         android:hardwareAccelerated="true"
         android:icon="@drawable/icon"
         android:label="FaceTracker"
-        android:theme="@style/Theme.AppCompat" >
+        android:theme="@style/Theme.AppCompat">
         <meta-data
             android:name="com.google.android.gms.version"
             android:value="@integer/google_play_services_version" />
@@ -35,20 +36,18 @@
             android:icon="@drawable/icon"
             android:label="Face Tracker"
             android:screenOrientation="fullSensor"
-            android:theme="@style/Theme.AppCompat.NoActionBar" >
-        </activity>
-
-        <activity
-            android:name=".LoadingActivity">
+            android:theme="@style/Theme.AppCompat.NoActionBar"></activity>
+        <activity android:name=".LoadingActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
         <receiver
             android:name=".FaceTrackerActivity$ButtonListener"
-            android:exported="false" >
+            android:exported="false">
             <intent-filter>
                 <action android:name="Download_Cancelled" />
             </intent-filter>
@@ -61,9 +60,10 @@
             android:exported="true" />
 
         <activity android:name=".OptionActivity" />
-        <activity android:name=".PopupActivity"
-            android:theme="@style/Theme.AppCompat.Dialog" >
-        </activity>
+        <activity
+            android:name=".PopupActivity"
+            android:theme="@style/Theme.AppCompat.Dialog"></activity>
+        <activity android:name=".PatternActivity"></activity>
     </application>
 
 </manifest>
