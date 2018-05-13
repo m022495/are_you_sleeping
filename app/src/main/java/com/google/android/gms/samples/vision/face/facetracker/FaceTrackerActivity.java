@@ -191,7 +191,7 @@ public final class FaceTrackerActivity extends AppCompatActivity implements Sens
         // 흔들기 센서 초기화
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         accelerormeterSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        // 흔들기 센서 초기화
+        // 흔들기 센서 초기화1
         vibrator = (Vibrator)getSystemService(Context.VIBRATOR_SERVICE);
         sensorEventListener = new SensorEventListener() {
             @Override
@@ -252,6 +252,8 @@ public final class FaceTrackerActivity extends AppCompatActivity implements Sens
         text.setText("깨우는 방법" + wake);
         text = (TextView)findViewById(R.id.shutShow);
         text.setText("끄는 방법" + shut);
+        wake = opt.getString("wake","진동"); // 졸음감지 이후 깨우는 방법, 디폴트는 진동
+        shut = opt.getString("shut", "소리지르기"); // 알람 끄는법, 디폴트는 소리지르기
     }
 
     // 기존 두개 퍼미션 받는거에서 카메라는 로딩에서 받았고, Audio만 받게 변경
@@ -325,10 +327,10 @@ public final class FaceTrackerActivity extends AppCompatActivity implements Sens
 //        Log.d("cosmos","size = "+size.getWidth()+","+size.getHeight());
 
         mCameraSource = new CameraSource.Builder(context, detector)
-                .setRequestedPreviewSize(width,height)
+                .setRequestedPreviewSize(320,240)
                 .setFacing(CameraSource.CAMERA_FACING_FRONT)
                 .setAutoFocusEnabled(true)
-                .setRequestedFps(15.0f)
+                .setRequestedFps(10.0f)
                 .build(); // 카메라 소스 창조.
         startNotification();
     }

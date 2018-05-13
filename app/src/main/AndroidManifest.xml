@@ -22,7 +22,7 @@
         android:allowBackup="true"
         android:hardwareAccelerated="true"
         android:icon="@drawable/icon"
-        android:label="FaceTracker"
+        android:label="Are you sleeping?"
         android:theme="@style/Theme.AppCompat">
         <meta-data
             android:name="com.google.android.gms.version"
@@ -34,7 +34,7 @@
         <activity
             android:name=".FaceTrackerActivity"
             android:icon="@drawable/icon"
-            android:label="Face Tracker"
+            android:label="Are you sleeping?"
             android:screenOrientation="fullSensor"
             android:theme="@style/Theme.AppCompat.NoActionBar"></activity>
         <activity android:name=".LoadingActivity">
