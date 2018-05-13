@@ -249,9 +249,9 @@ public final class FaceTrackerActivity extends AppCompatActivity implements Sens
         wake = opt.getString("wake","설정되지 않음"); // 졸음감지 이후 깨우는 방법, 디폴트는 진동
         shut = opt.getString("shut", "설정되지 않음"); // 알람 끄는법, 디폴트는 소리지르기
         TextView text = (TextView)findViewById(R.id.wakeShow);
-        text.setText("깨우는 방법" + wake);
+        text.setText("깨우는 방법 : " + wake);
         text = (TextView)findViewById(R.id.shutShow);
-        text.setText("끄는 방법" + shut);
+        text.setText("끄는 방법 : " + shut);
         wake = opt.getString("wake","진동"); // 졸음감지 이후 깨우는 방법, 디폴트는 진동
         shut = opt.getString("shut", "소리지르기"); // 알람 끄는법, 디폴트는 소리지르기
     }
@@ -361,7 +361,11 @@ public final class FaceTrackerActivity extends AppCompatActivity implements Sens
         mPreview.stop();
         try {
             startNotification();
-            mCameraSource.start();
+            try {
+                mCameraSource.start();
+            }catch (SecurityException e){
+                e.printStackTrace();
+            }
             isForeGround = false;
         } catch (IOException e) {
             e.printStackTrace();
@@ -663,20 +667,24 @@ public final class FaceTrackerActivity extends AppCompatActivity implements Sens
         Intent notificationIntent = new Intent(this, FaceTrackerActivity.class);
         PendingIntent mPendingIntent = PendingIntent.getActivity(this,0,notificationIntent,0);
 
-        // ▷ 버튼을 눌렀을때
+        // ▷ 버튼을 눌렀을 때
         Intent startIntent = new Intent(this, buttonListener.getClass());
         startIntent.putExtra("key","start");
         PendingIntent pStartIntent = PendingIntent.getBroadcast(this,1,startIntent,0);
 
-        // || 버튼 눌렀을떄
+        // || 버튼 눌렀을 때
         Intent pauseIntent = new Intent(this, buttonListener.getClass());
         pauseIntent.putExtra("key","pause");
         PendingIntent pPauseIntent = PendingIntent.getBroadcast(this,2,pauseIntent,0);
 
-        // X 버튼 눌렀을때
+        // 설정 버튼 눌렀을 때
+        Intent settingIntent = new Intent(this, OptionActivity.class);
+        PendingIntent pSettingIntent = PendingIntent.getActivity(this,3,settingIntent,0);
+
+        // X 버튼 눌렀을 때
         Intent closeIntent = new Intent(this, buttonListener.getClass());
         closeIntent.putExtra("key","close");
-        PendingIntent pCloseIntent = PendingIntent.getBroadcast(this,3,closeIntent,0);
+        PendingIntent pCloseIntent = PendingIntent.getBroadcast(this,4,closeIntent,0);
 
 //        Intent lockIntent = new Intent(this, FaceTrackerActivity.class);
 //        lockIntent.putExtra("key", "lock");
@@ -690,8 +698,9 @@ public final class FaceTrackerActivity extends AppCompatActivity implements Sens
         // 버튼이 눌릴때 불려질 PendingIntent 설정
         notificationView.setOnClickPendingIntent(R.id.start, pStartIntent);
         notificationView.setOnClickPendingIntent(R.id.pause, pPauseIntent);
+        notificationView.setOnClickPendingIntent(R.id.setting, pSettingIntent);
         notificationView.setOnClickPendingIntent(R.id.close, pCloseIntent);
-//        notificationView.setOnClickPendingIntent(R.id.lock, pLockIntent);
+
 
         // 알림 실행
         notificationManager.notify(1,notification);
@@ -723,7 +732,11 @@ public final class FaceTrackerActivity extends AppCompatActivity implements Sens
                     Toast.makeText(context, "CameraSource on", Toast.LENGTH_SHORT).show();
                     mPreview.stop();
                     try {
-                        mCameraSource.start();
+                        try {
+                            mCameraSource.start();
+                        }catch (SecurityException e){
+                            e.printStackTrace();
+                        }
                         if(isRecorded == true){
                             // startService(mute);
                             mRecorder.start();
@@ -742,6 +755,10 @@ public final class FaceTrackerActivity extends AppCompatActivity implements Sens
 //                        mRecorder.stop();
                         //stopService(mute);
                     }
+                    break;
+                case "setting":
+                    Log.d("cosmos", "setting test ok");
+                    Toast.makeText(context,"setting button test",Toast.LENGTH_SHORT).show();
                     break;
                 case "close":
                     Log.d("cosmos", "close test ok");

@@ -1,48 +1,70 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="horizontal" android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="wrap_content">
 
     <ImageView
         android:id="@+id/icon"
         android:layout_width="64dp"
         android:layout_height="64dp"
-        android:layout_weight="1"
+        android:padding="2dp"
         android:src="@drawable/icon"
+        android:layout_alignParentTop="true"
         android:contentDescription="001">
 
     </ImageView>
-
-    <ImageButton
-        android:id="@+id/start"
+    <TextView
+        android:id="@+id/title"
+        android:padding="3dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:src="@android:drawable/ic_media_play"
-        android:contentDescription="002"/>
+        android:layout_alignParentTop="true"
+        android:layout_toRightOf="@+id/icon"
+        android:text="Are You Sleeping?"/>
 
-    <ImageButton
-        android:id="@+id/pause"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:src="@android:drawable/ic_media_pause"
-        android:contentDescription="003"/>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="32dp"
+        android:layout_below="@+id/title"
+        android:paddingBottom="2dp"
+        android:layout_toRightOf="@id/icon">
 
-    <ImageButton
-        android:id="@+id/close"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:src="@android:drawable/ic_menu_close_clear_cancel"
-        android:contentDescription="004"/>
+        <ImageButton
+            android:id="@+id/start"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:adjustViewBounds="true"
+            android:layout_weight="1"
+            android:src="@drawable/play"
+            android:background="@android:color/transparent"/>
 
-    <ImageButton
-        android:id="@+id/lock"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:src="@android:drawable/ic_lock_idle_lock"
-        android:contentDescription="005"/>
+        <ImageButton
+            android:id="@+id/pause"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:adjustViewBounds="true"
+            android:layout_weight="1"
+            android:src="@drawable/pause"
+            android:background="@android:color/transparent"/>
 
-</LinearLayout>
+        <ImageButton
+            android:id="@+id/setting"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:adjustViewBounds="true"
+            android:layout_weight="1"
+            android:src="@drawable/setting"
+            android:background="@android:color/transparent"/>
+
+        <ImageButton
+            android:id="@+id/close"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:adjustViewBounds="true"
+            android:layout_weight="1"
+            android:src="@drawable/close"
+            android:background="@android:color/transparent"/>
+    </LinearLayout>
+
+
+</RelativeLayout>

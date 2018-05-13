@@ -36,12 +36,12 @@
           android:layout_height="wrap_content" />
     </LinearLayout>
 
-    <Button
+    <ImageButton
         android:id="@+id/optionButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:layout_alignParentLeft="true"
-        android:text="설정"
+        android:src="@drawable/setting"
         android:onClick="startOption"/>
 </RelativeLayout>
