@@ -22,7 +22,7 @@
       </configuration>
     </facet>
   </component>
-  <component name="NewModuleRootManager" LANGUAGE_LEVEL="JDK_1_7" inherit-compiler-output="false">
+  <component name="NewModuleRootManager" LANGUAGE_LEVEL="JDK_1_7">
     <output url="file://$MODULE_DIR$/build/intermediates/classes/debug" />
     <output-test url="file://$MODULE_DIR$/build/intermediates/classes/test/debug" />
     <exclude-output />
@@ -102,25 +102,24 @@
     </content>
     <orderEntry type="jdk" jdkName="Android API 24 Platform" jdkType="Android SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" exported="" name="support-media-compat-24.2.0" level="project" />
-    <orderEntry type="library" exported="" name="recyclerview-v7-24.2.0" level="project" />
-    <orderEntry type="library" exported="" name="support-v4-24.2.0" level="project" />
-    <orderEntry type="library" exported="" name="support-compat-24.2.0" level="project" />
-    <orderEntry type="library" exported="" name="play-services-base-9.4.0" level="project" />
-    <orderEntry type="library" exported="" name="constraint-layout-solver-1.0.2" level="project" />
-    <orderEntry type="library" exported="" name="support-core-ui-24.2.0" level="project" />
-    <orderEntry type="library" exported="" name="support-core-utils-24.2.0" level="project" />
-    <orderEntry type="library" exported="" name="constraint-layout-1.0.2" level="project" />
-    <orderEntry type="library" exported="" name="appcompat-v7-24.2.0" level="project" />
-    <orderEntry type="library" exported="" name="play-services-basement-9.4.0" level="project" />
-    <orderEntry type="library" exported="" name="play-services-tasks-9.4.0" level="project" />
-    <orderEntry type="library" exported="" name="support-fragment-24.2.0" level="project" />
-    <orderEntry type="library" exported="" name="support-annotations-24.2.0" level="project" />
-    <orderEntry type="library" exported="" name="support-vector-drawable-24.2.0" level="project" />
-    <orderEntry type="library" exported="" name="animated-vector-drawable-24.2.0" level="project" />
-    <orderEntry type="library" exported="" name="design-24.2.0" level="project" />
-    <orderEntry type="library" exported="" name="play-services-vision-9.4.0" level="project" />
-    <orderEntry type="library" exported="" name="android-patternview-1.0.6" level="project" />
-    <orderEntry type="library" exported="" name="android-android-24" level="project" />
+    <orderEntry type="library" exported="" name="Gradle: com.android.support.constraint:constraint-layout-solver:1.0.2@jar" level="project" />
+    <orderEntry type="library" exported="" name="Gradle: com.android.support:design-24.2.0" level="project" />
+    <orderEntry type="library" exported="" name="Gradle: com.android.support:support-compat-24.2.0" level="project" />
+    <orderEntry type="library" exported="" name="Gradle: com.android.support:animated-vector-drawable-24.2.0" level="project" />
+    <orderEntry type="library" exported="" name="Gradle: com.android.support.constraint:constraint-layout-1.0.2" level="project" />
+    <orderEntry type="library" exported="" name="Gradle: com.android.support:support-core-utils-24.2.0" level="project" />
+    <orderEntry type="library" exported="" name="Gradle: com.google.android.gms:play-services-base-9.4.0" level="project" />
+    <orderEntry type="library" exported="" name="Gradle: com.google.android.gms:play-services-vision-9.4.0" level="project" />
+    <orderEntry type="library" exported="" name="Gradle: com.android.support:support-vector-drawable-24.2.0" level="project" />
+    <orderEntry type="library" exported="" name="Gradle: com.google.android.gms:play-services-tasks-9.4.0" level="project" />
+    <orderEntry type="library" exported="" name="Gradle: com.android.support:support-core-ui-24.2.0" level="project" />
+    <orderEntry type="library" exported="" name="Gradle: com.eftimoff:android-patternview-1.0.6" level="project" />
+    <orderEntry type="library" exported="" name="Gradle: com.android.support:support-annotations:24.2.0@jar" level="project" />
+    <orderEntry type="library" exported="" name="Gradle: com.android.support:recyclerview-v7-24.2.0" level="project" />
+    <orderEntry type="library" exported="" name="Gradle: com.android.support:support-v4-24.2.0" level="project" />
+    <orderEntry type="library" exported="" name="Gradle: com.android.support:support-fragment-24.2.0" level="project" />
+    <orderEntry type="library" exported="" name="Gradle: com.android.support:support-media-compat-24.2.0" level="project" />
+    <orderEntry type="library" exported="" name="Gradle: com.google.android.gms:play-services-basement-9.4.0" level="project" />
+    <orderEntry type="library" exported="" name="Gradle: com.android.support:appcompat-v7-24.2.0" level="project" />
   </component>
 </module>

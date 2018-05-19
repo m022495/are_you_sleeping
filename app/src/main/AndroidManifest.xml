@@ -36,7 +36,7 @@
             android:icon="@drawable/icon"
             android:label="Are you sleeping?"
             android:screenOrientation="fullSensor"
-            android:theme="@style/Theme.AppCompat.NoActionBar"></activity>
+            android:theme="@style/Theme.AppCompat.NoActionBar" />
         <activity android:name=".LoadingActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -60,22 +60,16 @@
             android:exported="true" />
 
         <activity
-            android:name=".OptionActivity"
-
-            />
-        <activity
-            android:name=".PopupActivity"
-            android:theme="@style/Theme.AppCompat.Dialog"></activity>
-        <activity
             android:name=".PatternActivity"
-            android:theme="@style/Theme.AppCompat.Dialog"
             android:launchMode="singleInstance"
-            >
+            android:theme="@style/Theme.AppCompat.Dialog">
             <intent-filter>
-                <action android:name="com.google.android.gms.samples.vision.face.facetracker.pattern"/>
-                <category android:name="android.intent.category.DEFAULT"/>
+                <action android:name="com.google.android.gms.samples.vision.face.facetracker.pattern" />
+
+                <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
+        <activity android:name=".TabActivity"></activity>
     </application>
 
 </manifest>

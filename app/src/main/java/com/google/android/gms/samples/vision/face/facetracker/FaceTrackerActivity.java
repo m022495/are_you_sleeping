@@ -589,7 +589,7 @@ public final class FaceTrackerActivity extends AppCompatActivity implements Sens
     }
 
     public void startOption(View view){
-        Intent intent1 = new Intent(this, OptionActivity.class);
+        Intent intent1 = new Intent(this, TabActivity.class);
         startActivity(intent1);
     }
 
