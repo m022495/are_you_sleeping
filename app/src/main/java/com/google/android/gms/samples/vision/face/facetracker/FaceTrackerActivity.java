@@ -15,31 +15,26 @@
  */
 package com.google.android.gms.samples.vision.face.facetracker;
 
-import android.Manifest;
+
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
-import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.os.Vibrator;
 
-import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -61,7 +56,6 @@ import com.google.android.gms.samples.vision.face.facetracker.ui.camera.CameraSo
 import com.google.android.gms.samples.vision.face.facetracker.ui.camera.GraphicOverlay;
 
 import java.io.IOException;
-import java.util.regex.Pattern;
 
 /**
  * Activity for the face tracker app.  This app detects faces with the rear facing camera, and draws
@@ -162,19 +156,8 @@ public final class FaceTrackerActivity extends AppCompatActivity implements Sens
         //mPreview.setVisibility(View.GONE);
         mGraphicOverlay = (GraphicOverlay) findViewById(R.id.faceOverlay);
 
-        // Check for the camera permission before accessing the camera.  If the
-        // permission is not granted yet, request permission.
-        //int rc = ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA);
-
         createCameraSource();
 
-        int rc = ActivityCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO);
-        if (rc != PackageManager.PERMISSION_GRANTED) {
-            requestAudioPermission();
-        }
-//        else {
-//            requestCameraPermission();
-//        }
         mute = new Intent(this, AlarmService.class);
 
         SharedPreferences opt = getSharedPreferences("Option", MODE_PRIVATE); // 이전거 가져오나봐 자세한건 잘 모르겠다.
@@ -186,8 +169,6 @@ public final class FaceTrackerActivity extends AppCompatActivity implements Sens
         isRecorded = false;
         // 알림창 생성 맨 아래에 있음
 
-        wake = opt.getString("wake","진동"); // 졸음감지 이후 깨우는 방법, 디폴트는 진동
-        shut = opt.getString("shut", "소리지르기"); // 알람 끄는법, 디폴트는 소리지르기
         // 흔들기 센서 초기화
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         accelerormeterSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
@@ -208,12 +189,10 @@ public final class FaceTrackerActivity extends AppCompatActivity implements Sens
 
                         speed = Math.abs(x + y + z - lastX - lastY - lastZ) / gabOfTime * 10000;
 
-
                         lastX = event.values[DATA_X];
                         lastY = event.values[DATA_Y];
                         lastZ = event.values[DATA_Z];
                     }
-
                     if (speed > SHAKE_THRESHOLD) {
                         shakeCount = shakeCount+1;
                         if(shakeCount>20){
@@ -228,7 +207,6 @@ public final class FaceTrackerActivity extends AppCompatActivity implements Sens
                                 sensorManager.unregisterListener(sensorEventListener);
                         }
                     }
-
                 }
             }
 
@@ -240,62 +218,22 @@ public final class FaceTrackerActivity extends AppCompatActivity implements Sens
 
     }
 
-     //여기서부터 임시로 만든 부분. 추후 프로그램 제작시 지울것
+    //여기서부터 임시로 만든 부분. 추후 프로그램 제작시 지울것
     //옵션값이 저장됨을 확인하기 위해 일시적으로 만든 디버그용 텍스트 설정
     @Override
     protected void onStart() {
         super.onStart();
 
         SharedPreferences opt = getSharedPreferences("Option", MODE_PRIVATE);
-        wake = opt.getString("wake","설정되지 않음"); // 졸음감지 이후 깨우는 방법, 디폴트는 진동
-        shut = opt.getString("shut", "설정되지 않음"); // 알람 끄는법, 디폴트는 소리지르기
+        wake = opt.getString("wake","진동"); // 졸음감지 이후 깨우는 방법, 디폴트는 진동
+        shut = opt.getString("shut", "흔들기"); // 알람 끄는법, 디폴트는 소리지르기
         TextView text = (TextView)findViewById(R.id.wakeShow);
         if(text!=null){
-            text.setText("깨우는 방법" + wake);
+            text.setText("깨우는 방법 : " + wake);
         }
         text = (TextView)findViewById(R.id.shutShow);
         if(text!=null){
-            text.setText("끄는 방법" + shut);
-        }
-        wake = opt.getString("wake","진동"); // 졸음감지 이후 깨우는 방법, 디폴트는 진동
-        shut = opt.getString("shut", "소리지르기"); // 알람 끄는법, 디폴트는 소리지르기
-    }
-
-    // 기존 두개 퍼미션 받는거에서 카메라는 로딩에서 받았고, Audio만 받게 변경
-    private void requestAudioPermission() {
-        // Log.w(TAG, "Camera permission is not granted. Requesting permission");
-
-        final String[] permissions = new String[]{Manifest.permission.RECORD_AUDIO};
-        // 버전에 맞춰서 오디오 퍼미션 요청
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            int audioPermissionResult = checkSelfPermission(Manifest.permission.RECORD_AUDIO);
-
-            if( audioPermissionResult == PackageManager.PERMISSION_DENIED) {
-                if (shouldShowRequestPermissionRationale(Manifest.permission.RECORD_AUDIO)) {
-                    android.support.v7.app.AlertDialog.Builder dialog = new android.support.v7.app.AlertDialog.Builder(FaceTrackerActivity.this);
-                    dialog.setTitle("권한이 필요합니다.")
-                            .setMessage("이 어플리케이션은 오디오 권한을 필요로 합니다. 권한이 없을시 일부 기능이 동작하지 않을 수 있습니다. 계속 하시겠습니까?")
-                            .setPositiveButton("네", new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialogInterface, int i) {
-                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                                        requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO}, RC_HANDLE_AUDIO_PERM);
-                                    }
-                                }
-                            })
-                            .setNegativeButton("아니오", new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialogInterface, int i) {
-                                    Toast.makeText(FaceTrackerActivity.this, "녹음 기능을 사용하지 않습니다.", Toast.LENGTH_SHORT).show();
-                                }
-                            })
-                            .create()
-                            .show();
-                }
-                else {
-                    requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO}, RC_HANDLE_AUDIO_PERM);
-                }
-            }
+            text.setText("끄는 방법 : " + shut);
         }
 
     }
@@ -366,7 +304,11 @@ public final class FaceTrackerActivity extends AppCompatActivity implements Sens
         mPreview.stop();
         try {
             startNotification();
-            mCameraSource.start();
+            try {
+                mCameraSource.start();
+            }catch (SecurityException e){
+                e.printStackTrace();
+            }
             isForeGround = false;
         } catch (IOException e) {
             e.printStackTrace();
@@ -389,48 +331,6 @@ public final class FaceTrackerActivity extends AppCompatActivity implements Sens
         vibrator.cancel();
     }
 
-    @Override // 퍼미션을 요청했을 경우 여기서 반환값을 만들어 내줌.
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-//        if (requestCode != RC_HANDLE_CAMERA_PERM) {
-//            Log.d(TAG, "Got unexpected permission result: " + requestCode);
-//            super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-//            return;
-//        }
-
-        if(requestCode == RC_HANDLE_AUDIO_PERM){
-            if(grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
-                if(ActivityCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
-                        ==PackageManager.PERMISSION_GRANTED) {
-                    Toast.makeText(FaceTrackerActivity.this,"녹음 권한을 승인했습니다.",Toast.LENGTH_SHORT).show();
-                }
-            }
-            else {
-                Toast.makeText(FaceTrackerActivity.this,"녹음 권한을 거부했습니다.",Toast.LENGTH_SHORT).show();
-            }
-        }
-//
-//        if (grantResults.length != 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-//            Log.d(TAG, "Camera permission granted - initialize the camera source");
-//            // we have permission, so create the camerasource
-//            createCameraSource();
-//            return;
-//        }
-//
-//        Log.e(TAG, "Permission not granted: results len = " + grantResults.length +
-//                " Result code = " + (grantResults.length > 0 ? grantResults[0] : "(empty)"));
-//
-//        DialogInterface.OnClickListener listener = new DialogInterface.OnClickListener() {
-//            public void onClick(DialogInterface dialog, int id) {
-//                finish();
-//            }
-//        };
-//
-//        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-//        builder.setTitle("Face Tracker sample")
-//                .setMessage(R.string.no_camera_permission)
-//                .setPositiveButton(R.string.ok, listener)
-//                .show();
-    }
 
     //==============================================================================================
     // Camera Source Preview
@@ -453,11 +353,8 @@ public final class FaceTrackerActivity extends AppCompatActivity implements Sens
         }
 
         if (mCameraSource != null) {
-
             try {
-
                 mPreview.start(mCameraSource, mGraphicOverlay);
-
             } catch (IOException e) {
                 Log.e(TAG, "Unable to start camera source.", e);
                 mCameraSource.release();
@@ -536,7 +433,6 @@ public final class FaceTrackerActivity extends AppCompatActivity implements Sens
                    isRecorded = true;
                    isThreadRun = true; // 녹음 쓰레드를 시작시키게 함.
                    startListenAudio(); // 오디오 녹음과 데시벨 측정 시작.
-
                }else if(shut.equals("흔들기")){
                    if (accelerormeterSensor != null)
                        sensorManager.registerListener(sensorEventListener,accelerormeterSensor,SensorManager.SENSOR_DELAY_GAME);
@@ -606,7 +502,7 @@ public final class FaceTrackerActivity extends AppCompatActivity implements Sens
             super.handleMessage(msg);
             if (msg.what == 1) {
                 Log.w("decibel", String.valueOf(World.dbCount));
-                if (World.dbCount > 80) { // 데시벨이 90이상이면
+                if (World.dbCount > 80) { // 데시벨이 80이상이면
                     //  ad.cancel();
                     CCount = 0;
                     OCount = 0;
@@ -672,20 +568,24 @@ public final class FaceTrackerActivity extends AppCompatActivity implements Sens
         Intent notificationIntent = new Intent(this, FaceTrackerActivity.class);
         PendingIntent mPendingIntent = PendingIntent.getActivity(this,0,notificationIntent,0);
 
-        // ▷ 버튼을 눌렀을때
+        // ▷ 버튼을 눌렀을 때
         Intent startIntent = new Intent(this, buttonListener.getClass());
         startIntent.putExtra("key","start");
         PendingIntent pStartIntent = PendingIntent.getBroadcast(this,1,startIntent,0);
 
-        // || 버튼 눌렀을떄
+        // || 버튼 눌렀을 때
         Intent pauseIntent = new Intent(this, buttonListener.getClass());
         pauseIntent.putExtra("key","pause");
         PendingIntent pPauseIntent = PendingIntent.getBroadcast(this,2,pauseIntent,0);
 
-        // X 버튼 눌렀을때
+        // 설정 버튼 눌렀을 때
+        Intent settingIntent = new Intent(this, TabActivity.class);
+        PendingIntent pSettingIntent = PendingIntent.getActivity(this,3,settingIntent,0);
+
+        // X 버튼 눌렀을 때
         Intent closeIntent = new Intent(this, buttonListener.getClass());
         closeIntent.putExtra("key","close");
-        PendingIntent pCloseIntent = PendingIntent.getBroadcast(this,3,closeIntent,0);
+        PendingIntent pCloseIntent = PendingIntent.getBroadcast(this,4,closeIntent,0);
 
 //        Intent lockIntent = new Intent(this, FaceTrackerActivity.class);
 //        lockIntent.putExtra("key", "lock");
@@ -699,8 +599,9 @@ public final class FaceTrackerActivity extends AppCompatActivity implements Sens
         // 버튼이 눌릴때 불려질 PendingIntent 설정
         notificationView.setOnClickPendingIntent(R.id.start, pStartIntent);
         notificationView.setOnClickPendingIntent(R.id.pause, pPauseIntent);
+        notificationView.setOnClickPendingIntent(R.id.setting, pSettingIntent);
         notificationView.setOnClickPendingIntent(R.id.close, pCloseIntent);
-//        notificationView.setOnClickPendingIntent(R.id.lock, pLockIntent);
+
 
         // 알림 실행
         notificationManager.notify(1,notification);
@@ -708,14 +609,10 @@ public final class FaceTrackerActivity extends AppCompatActivity implements Sens
 
     // shake 센서 변동시 불리는 메소드
     @Override
-    public void onSensorChanged(SensorEvent event) {
-
-    }
+    public void onSensorChanged(SensorEvent event) { }
 
     @Override
-    public void onAccuracyChanged(Sensor sensor, int accuracy) {
-
-    }
+    public void onAccuracyChanged(Sensor sensor, int accuracy) { }
 
 
     // manifests에 명시할때 주의할 것
@@ -731,7 +628,11 @@ public final class FaceTrackerActivity extends AppCompatActivity implements Sens
                     Toast.makeText(context, "CameraSource on", Toast.LENGTH_SHORT).show();
                     mPreview.stop();
                     try {
-                        mCameraSource.start();
+                        try {
+                            mCameraSource.start();
+                        }catch (SecurityException e){
+                            e.printStackTrace();
+                        }
                         if(isRecorded == true){
                             // startService(mute);
                             mRecorder.start();
@@ -750,6 +651,10 @@ public final class FaceTrackerActivity extends AppCompatActivity implements Sens
 //                        mRecorder.stop();
                         //stopService(mute);
                     }
+                    break;
+                case "setting":
+                    Log.d("cosmos", "setting test ok");
+                    Toast.makeText(context,"setting button test",Toast.LENGTH_SHORT).show();
                     break;
                 case "close":
                     Log.d("cosmos", "close test ok");
