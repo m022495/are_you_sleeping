@@ -3,6 +3,7 @@ package com.google.android.gms.samples.vision.face.facetracker;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.IBinder;
@@ -18,7 +19,7 @@ public class AlarmService extends Service {
     private MediaPlayer mp;
     private AudioManager ap;
     private int nowVolume;
-
+    private String wake;
     public AlarmService(){
 
     }
@@ -31,7 +32,13 @@ public class AlarmService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        mp = MediaPlayer.create(this, R.raw.song1);
+        SharedPreferences opt = getSharedPreferences("Option", MODE_PRIVATE); // 이전거 가져오나봐 자세한건 잘 모르겠다.
+        wake = opt.getString("wake","진동"); // 졸음감지 이후 깨우는 방법, 디폴트는 진동
+        if(wake.equals("음악")){
+            mp = MediaPlayer.create(this, R.raw.ghost1);
+        }else if(wake.equals("귀신소리")){
+            mp = MediaPlayer.create(this, R.raw.pee);
+        }
         ap = (AudioManager) getSystemService(Context.AUDIO_SERVICE); // 얘가 볼륨 조절도 할 수 있음.
         mp.setLooping(true);
         nowVolume = ap.getStreamVolume(AudioManager.STREAM_MUSIC); // 현재 볼륨은 저장

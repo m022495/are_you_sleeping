@@ -42,18 +42,19 @@ public class PatternActivity extends AppCompatActivity {
             @Override
             public void onPatternDetected() {
                 SharedPreferences opt = getSharedPreferences("Option", MODE_PRIVATE); // 이전거 가져오나봐 자세한건 잘 모르겠다
+                String patternT = opt.getString("patternT","0"); // 졸음감지 이후 깨우는 방법, 디폴트는 진동
 
                 patternString = opt.getString("pattern",null);
-                if (patternString == null) {
+                if (patternString == null || patternT.equals("0")) {
                     SharedPreferences.Editor editor = opt.edit();
                     Toast.makeText(PatternActivity.this, "사용하실 패턴을 입력하세요.", Toast.LENGTH_SHORT).show();
                     patternString = patternView.getPatternString();
                     editor.putString("pattern",patternString);
+                    editor.putString("patternT","1");
                     patternView.clearPattern();
                     editor.commit();
                     finish();
                     return;
-
                 }
                 if (patternString.equals(patternView.getPatternString())) {
                     Toast.makeText(getApplicationContext(), "PATTERN CORRECT", Toast.LENGTH_SHORT).show();
@@ -71,8 +72,6 @@ public class PatternActivity extends AppCompatActivity {
                     Toast.makeText(getApplicationContext(), "PATTERN NOT CORRECT", Toast.LENGTH_SHORT).show();
                     patternView.clearPattern();
                 }
-
-
             }
         });
     }

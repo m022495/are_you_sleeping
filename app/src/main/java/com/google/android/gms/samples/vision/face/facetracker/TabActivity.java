@@ -1,5 +1,6 @@
 package com.google.android.gms.samples.vision.face.facetracker;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.support.v7.app.AppCompatActivity;
@@ -83,6 +84,13 @@ public class TabActivity extends AppCompatActivity {
         SharedPreferences.Editor editor = opt.edit();
         editor.putString("shut","패턴인식");
         editor.commit();
+        SharedPreferences opt1 = getSharedPreferences("Option", MODE_PRIVATE); // 이전거 가져오나봐 자세한건 잘 모르겠다.
+        String pattern1 = opt1.getString("patternT","0"); // 졸음감지 이후 깨우는 방법, 디폴트는 진동
+        if(pattern1.equals("0")){
+            Intent intent = new Intent("com.google.android.gms.samples.vision.face.facetracker.pattern");
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);   // 이거 안해주면 안됨
+            startActivity(intent);
+        }
         refresh();
     }
 

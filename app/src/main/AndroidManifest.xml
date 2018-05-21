@@ -69,7 +69,17 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
-        <activity android:name=".TabActivity"></activity>
+        <activity android:name=".TabActivity" />
+        <activity android:name=".GhostPopUp"
+            android:launchMode="singleInstance"
+            android:theme="@style/Theme.AppCompat.Dialog"
+            >
+            <intent-filter>
+                <action android:name="com.google.android.gms.samples.vision.face.facetracker.ghost" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
     </application>
 
 </manifest>

@@ -223,6 +223,7 @@ public final class FaceTrackerActivity extends AppCompatActivity implements Sens
                             }else if(wake.equals("진동")){
                                 vibrator.cancel();
                             }
+                            CCount = 0;
                             if (sensorManager != null)
                                 sensorManager.unregisterListener(sensorEventListener);
                         }
@@ -517,8 +518,12 @@ public final class FaceTrackerActivity extends AppCompatActivity implements Sens
             if (face.getIsRightEyeOpenProbability() < 0.5 && face.getIsRightEyeOpenProbability() < 0.5 && isMute == 1 && CCount == 30) {
                 CCount = CCount + 1; // 얘를 1 상승 시켜서 31으로 만듦. 0으로 만들경우 밑의 경우에 걸려
                 OCount = 0; // open카운트는 0으로 만들어버림.
-                if(wake.equals("음악")){
-
+                if(wake.equals("음악") || wake.equals("귀신소리")){
+                    if(!shut.equals("패턴인식")){
+                        Intent ghostIntent = new Intent("com.google.android.gms.samples.vision.face.facetracker.ghost");
+                        ghostIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);   // 이거 안해주면 안됨
+                        startActivity(ghostIntent);
+                    }
                     startService(mute); // 알람 시작
 
                     //dialogDecibel();
@@ -601,7 +606,7 @@ public final class FaceTrackerActivity extends AppCompatActivity implements Sens
             super.handleMessage(msg);
             if (msg.what == 1) {
                 Log.w("decibel", String.valueOf(World.dbCount));
-                if (World.dbCount > 90) { // 데시벨이 90이상이면
+                if (World.dbCount > 80) { // 데시벨이 90이상이면
                     //  ad.cancel();
                     CCount = 0;
                     OCount = 0;
@@ -704,7 +709,6 @@ public final class FaceTrackerActivity extends AppCompatActivity implements Sens
     // shake 센서 변동시 불리는 메소드
     @Override
     public void onSensorChanged(SensorEvent event) {
-
 
     }
 
