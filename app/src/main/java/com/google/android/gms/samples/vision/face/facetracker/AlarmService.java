@@ -40,7 +40,7 @@ public class AlarmService extends Service {
             mp = MediaPlayer.create(this, R.raw.pee);
         }
         ap = (AudioManager) getSystemService(Context.AUDIO_SERVICE); // 얘가 볼륨 조절도 할 수 있음.
-        mp.setLooping(true);
+        mp.setLooping(true); // 무한루프
         nowVolume = ap.getStreamVolume(AudioManager.STREAM_MUSIC); // 현재 볼륨은 저장
         ap.setStreamVolume(AudioManager.STREAM_MUSIC,15,AudioManager.FLAG_PLAY_SOUND); // 볼륨 최대로!
         mp.start();

@@ -143,6 +143,9 @@ public final class FaceTrackerActivity extends AppCompatActivity implements Sens
     private RemoteViews notificationView; // 알람 보이도록하는 뷰
     public static boolean isForeGround = true;
     public static Activity activity;
+
+    // Setting창 트리거
+    private boolean isSetting = false;
     /**
      * Initializes the UI and initiates the creation of a face detector.
      */
@@ -178,8 +181,7 @@ public final class FaceTrackerActivity extends AppCompatActivity implements Sens
             @Override
             public void onSensorChanged(SensorEvent event) {
                 if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
-                    Toast.makeText(FaceTrackerActivity.this, "shake", Toast.LENGTH_SHORT).show();
-                    long currentTime = System.currentTimeMillis();
+                   long currentTime = System.currentTimeMillis();
                     long gabOfTime = (currentTime - lastTime);
                     if (gabOfTime > 100) {
                         lastTime = currentTime;
@@ -287,7 +289,7 @@ public final class FaceTrackerActivity extends AppCompatActivity implements Sens
         if(mCameraSource != null) {
             mCameraSource.stop();
         }
-
+        isSetting = false;
         startCameraSource();
         isForeGround = true;
         if(notificationManager != null) {
@@ -305,7 +307,11 @@ public final class FaceTrackerActivity extends AppCompatActivity implements Sens
         try {
             startNotification();
             try {
-                mCameraSource.start();
+                if (isSetting == false)
+                {
+                    mCameraSource.start();
+                }
+
             }catch (SecurityException e){
                 e.printStackTrace();
             }
@@ -425,7 +431,6 @@ public final class FaceTrackerActivity extends AppCompatActivity implements Sens
 
                     //dialogDecibel();
                 }else if(wake.equals("진동")){
-
                     vibrator.vibrate(pattern,0);
                 }
 
@@ -490,8 +495,13 @@ public final class FaceTrackerActivity extends AppCompatActivity implements Sens
     }
 
     public void startOption(View view){
-        Intent intent1 = new Intent(this, TabActivity.class);
-        startActivity(intent1);
+        if(CCount >30){
+            Toast.makeText(activity, "알람을 먼저 끈 후에 시도해주세요", Toast.LENGTH_SHORT).show();
+        }else{
+            isSetting = true;
+            Intent intent1 = new Intent(this, TabActivity.class);
+            startActivity(intent1);
+        }
     }
 
     // 데시벨 관련 소스 시작
@@ -668,6 +678,5 @@ public final class FaceTrackerActivity extends AppCompatActivity implements Sens
 
         }
     }
-
 }
 
