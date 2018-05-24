@@ -29,9 +29,6 @@ public class LoadingActivity extends AppCompatActivity {
         checkPermission();
     }
 
-
-
-
     private void checkPermission(){
         // 마쉬멜로우 이상인지 체크
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){

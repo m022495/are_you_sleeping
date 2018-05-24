@@ -16,6 +16,7 @@
 package com.google.android.gms.samples.vision.face.facetracker;
 
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -24,17 +25,26 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.os.Vibrator;
 
+import android.provider.MediaStore;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -93,6 +103,8 @@ public final class FaceTrackerActivity extends AppCompatActivity implements Sens
     // permission request codes need to be < 256
     // private static final int RC_HANDLE_CAMERA_PERM = 3;
     private static final int RC_HANDLE_AUDIO_PERM = 2;
+    private static final int RC_HANDLE_WRITE_STORAGE_PERM = 4;
+    private static final int RC_HANDLE_READ_STORAGE_PERM = 5;
 
     // 추가된 옵션값
     private String wake;
@@ -133,10 +145,6 @@ public final class FaceTrackerActivity extends AppCompatActivity implements Sens
     private SensorEventListener sensorEventListener;
 
 
-    //==============================================================================================
-    // Activity Methods
-    //==============================================================================================
-
     // 알림창 띄우기 위한 변수
     private NotificationManager notificationManager; // 알람 관리
     private Notification notification; // 알람
@@ -146,6 +154,10 @@ public final class FaceTrackerActivity extends AppCompatActivity implements Sens
 
     // Setting창 트리거
     private boolean isSetting = false;
+
+    // 얼굴만을 캡쳐하기 위해 현재 overlay되고 있는 얼굴에 대한 정보가 필요함
+    private Face mFace;
+
     /**
      * Initializes the UI and initiates the creation of a face detector.
      */
@@ -415,6 +427,8 @@ public final class FaceTrackerActivity extends AppCompatActivity implements Sens
         public void onUpdate(FaceDetector.Detections<Face> detectionResults, Face face) {
             mOverlay.add(mFaceGraphic);
             mFaceGraphic.updateFace(face); //바뀐 정보 업데이트
+            mFace = face;
+
             Log.w("count", String.valueOf(CCount) + " //" + String.valueOf(OCount));
             // 눈 감고 있고 시작 시점이 아니며 눈 감고 있는 카운트가 30 이 되면 open count는 필요 없어
             // 눈감고 있는건 3초 , 눈뜬건 6초 기준으로 잡음.
@@ -481,6 +495,7 @@ public final class FaceTrackerActivity extends AppCompatActivity implements Sens
         @Override
         public void onMissing(FaceDetector.Detections<Face> detectionResults) {
             mOverlay.remove(mFaceGraphic);
+            mFace = null;
             //stopService(mute);
         }
 
@@ -563,6 +578,127 @@ public final class FaceTrackerActivity extends AppCompatActivity implements Sens
         });
         thread.start();
     }
+
+    public void captureImage(View v){
+//        int storagePermissionResult = checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE);
+//        if(storagePermissionResult != PackageManager.PERMISSION_GRANTED){
+//            requestStoragePermission();
+//        }
+
+        mCameraSource.takePicture(null, new CameraSource.PictureCallback() {
+            @Override
+            public void onPictureTaken(byte[] bytes) {
+                try{
+                    // 얼굴이 missing 되면 얼굴사진이 나올 수 없으니까 안됨.
+                    if(mFace==null){
+                        Toast.makeText(getApplicationContext(),"얼굴을 인식하지 못하였습니다.",Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
+                    // 비트맵 만들고 화면처럼 사진 찍히게 변경
+                    Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+                    // byte 데이터를 bitmap으로 바꿔 저장하는데, 메인화면과는 다르게 옆으로 누워있는 사진이 저장되기 때문에 조정을 해줌.
+                    Matrix matrix = new Matrix();
+                    matrix.postRotate(-90);
+                    Bitmap rotateBitmap = Bitmap.createBitmap(bitmap,0,0,bitmap.getWidth(),bitmap.getHeight(),matrix,false);
+//                    matrix.setScale(-1,1); // 좌우반전
+//                    Bitmap reverseBitmap = Bitmap.createBitmap(rotateBitmap,0,0,rotateBitmap.getWidth(),rotateBitmap.getHeight(),matrix,false);
+
+                    Log.d("Capture", "bitmap size : "+rotateBitmap.getWidth() + ","+ rotateBitmap.getHeight());
+                    Log.d("Capture", "face data : "+(int)mFace.getPosition().x + ","+ (int)mFace.getPosition().y+" + "+ (int)mFace.getWidth()+"x"+ (int)mFace.getHeight());
+
+                    // 사진 자르게 준비
+                    int partX = (int) (mFace.getPosition().x * rotateBitmap.getWidth() / 240);
+                    int partY = (int) (mFace.getPosition().y * rotateBitmap.getHeight() / 320);
+                    int partWidth = (int) (mFace.getWidth() * rotateBitmap.getWidth() / 240);
+                    int partHeight = (int) (mFace.getHeight() * rotateBitmap.getHeight() / 320);
+
+                    Log.d("Capture", ""+partX+"x"+partY+"x"+partWidth+"x"+partHeight);
+                    Bitmap partBit = Bitmap.createBitmap(rotateBitmap, partX, partY, partWidth, partHeight);
+                    // 자른 사진이 기존 화면과 다르게 좌우 반전이 되어있어서 조정해줌.
+                    matrix.setScale(-1,1);
+                    Bitmap partRotate = Bitmap.createBitmap(partBit,0,0,partBit.getWidth(),partBit.getHeight(),matrix,false);
+
+                    String outUriStr = MediaStore.Images.Media.insertImage(getContentResolver(),partRotate, "Capture Face", "Captured image using FaceTracker");
+
+                    if(outUriStr == null){
+                        Log.d("Capture", "image insert failed.");
+                        return;
+                    }
+                    else{
+                        Uri outUri = Uri.parse(outUriStr);
+                        sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE,outUri));
+                    }
+
+                    Toast.makeText(getApplicationContext(),"카메라로 찍은 사진을 앨범에 저장합니다",Toast.LENGTH_SHORT).show();
+
+                } catch (Exception e) {
+                    Log.e("Capture", "Failed to insert image",e);
+                    e.printStackTrace();
+                }
+
+            }
+        });
+
+
+    }
+
+    // 기존 두개 퍼미션 받는거에서 카메라는 로딩에서 받았고, Audio만 받게 변경
+    private void requestStoragePermission() {
+
+        // 버전에 맞춰서 퍼미션 요청
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            //int storagePermissionResult = checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE);
+            int storagePermissionResult = checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE);
+
+            if( storagePermissionResult == PackageManager.PERMISSION_DENIED) {
+                if (shouldShowRequestPermissionRationale(Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+                    android.support.v7.app.AlertDialog.Builder dialog = new android.support.v7.app.AlertDialog.Builder(FaceTrackerActivity.this);
+                    dialog.setTitle("권한이 필요합니다.")
+                            .setMessage("해당 기능은 저장소 권한을 필요로 합니다. 권한이 없을시 기능이 동작하지 않습니다. 권한을 요청하시겠습니까?")
+                            .setPositiveButton("네", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialogInterface, int i) {
+                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                                        requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, RC_HANDLE_WRITE_STORAGE_PERM);
+                                    }
+                                }
+                            })
+                            .setNegativeButton("아니오", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialogInterface, int i) {
+                                    Toast.makeText(FaceTrackerActivity.this, "저장소 기능을 사용하지 않습니다.", Toast.LENGTH_SHORT).show();
+                                    finish();
+                                }
+                            })
+                            .create()
+                            .show();
+                }
+                else {
+                    requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, RC_HANDLE_WRITE_STORAGE_PERM);
+                }
+            }
+        }
+
+    }
+
+    @Override // 퍼미션을 요청했을 경우 여기서 반환값을 만들어 내줌.
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+
+        if (requestCode == RC_HANDLE_WRITE_STORAGE_PERM) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                if (ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                        == PackageManager.PERMISSION_GRANTED) {
+                    Toast.makeText(FaceTrackerActivity.this, "저장소 권한을 승인했습니다.", Toast.LENGTH_SHORT).show();
+                }
+            } else {
+                Toast.makeText(FaceTrackerActivity.this, "저장소 권한을 거부했습니다. 해당 기능은 저장소 권한이 없을 시 사용이 불가능합니다.", Toast.LENGTH_SHORT).show();
+                finish();
+            }
+        }
+    }
+
+
 
     // onCreate에서 불려져서 알림창을 생성함
     private void startNotification(){

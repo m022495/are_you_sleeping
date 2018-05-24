@@ -192,11 +192,10 @@ public class TabActivity extends AppCompatActivity {
         }
 
     }
+
     // 기존 두개 퍼미션 받는거에서 카메라는 로딩에서 받았고, Audio만 받게 변경
     private void requestAudioPermission() {
-        // Log.w(TAG, "Camera permission is not granted. Requesting permission");
 
-        //final String[] permissions = new String[]{Manifest.permission.RECORD_AUDIO};
         // 버전에 맞춰서 오디오 퍼미션 요청
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             int audioPermissionResult = checkSelfPermission(Manifest.permission.RECORD_AUDIO);
@@ -233,50 +232,21 @@ public class TabActivity extends AppCompatActivity {
 
     @Override // 퍼미션을 요청했을 경우 여기서 반환값을 만들어 내줌.
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-//        if (requestCode != RC_HANDLE_CAMERA_PERM) {
-//            Log.d(TAG, "Got unexpected permission result: " + requestCode);
-//            super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-//            return;
-//        }
 
-        if(requestCode == RC_HANDLE_AUDIO_PERM){
-            if(grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
-                if(ActivityCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
-                        ==PackageManager.PERMISSION_GRANTED) {
-                    Toast.makeText(TabActivity.this,"녹음 권한을 승인했습니다.",Toast.LENGTH_SHORT).show();
+        if (requestCode == RC_HANDLE_AUDIO_PERM) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                if (ActivityCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
+                        == PackageManager.PERMISSION_GRANTED) {
+                    Toast.makeText(TabActivity.this, "녹음 권한을 승인했습니다.", Toast.LENGTH_SHORT).show();
                     SharedPreferences opt = getSharedPreferences("Option", MODE_PRIVATE);
                     SharedPreferences.Editor editor = opt.edit();
                     editor.putString("shut", "소리지르기");
                     editor.commit();
                     refresh();
                 }
-            }
-            else {
-                Toast.makeText(TabActivity.this,"녹음 권한을 거부했습니다. 해당 기능은 녹음권한이 없을 시 사용이 불가능합니다.",Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(TabActivity.this, "녹음 권한을 거부했습니다. 해당 기능은 녹음권한이 없을 시 사용이 불가능합니다.", Toast.LENGTH_SHORT).show();
             }
         }
-//
-//        if (grantResults.length != 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-//            Log.d(TAG, "Camera permission granted - initialize the camera source");
-//            // we have permission, so create the camerasource
-//            createCameraSource();
-//            return;
-//        }
-//
-//        Log.e(TAG, "Permission not granted: results len = " + grantResults.length +
-//                " Result code = " + (grantResults.length > 0 ? grantResults[0] : "(empty)"));
-//
-//        DialogInterface.OnClickListener listener = new DialogInterface.OnClickListener() {
-//            public void onClick(DialogInterface dialog, int id) {
-//                finish();
-//            }
-//        };
-//
-//        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-//        builder.setTitle("Face Tracker sample")
-//                .setMessage(R.string.no_camera_permission)
-//                .setPositiveButton(R.string.ok, listener)
-//                .show();
     }
-
 }
