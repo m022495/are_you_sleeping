@@ -9,9 +9,11 @@ import android.graphics.Color;
 import android.os.Build;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.ActivityCompat;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TabHost;
 import android.widget.TextView;
@@ -26,7 +28,6 @@ public class TabActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_tab);
-
 
         TabHost tabHost=(TabHost)findViewById(R.id.tabHost);
         tabHost.setup();
@@ -86,26 +87,29 @@ public class TabActivity extends AppCompatActivity {
         editor.commit();
         refresh();
     }
-    public void clickSB3(View v){
-        SharedPreferences opt = getSharedPreferences("Option",MODE_PRIVATE);
-        SharedPreferences.Editor editor = opt.edit();
-        editor.putString("shut","단순버튼");
-        editor.commit();
-        refresh();
-    }
+
     public void clickSB4(View v){
         SharedPreferences opt = getSharedPreferences("Option",MODE_PRIVATE);
         SharedPreferences.Editor editor = opt.edit();
         editor.putString("shut","패턴인식");
         editor.commit();
         SharedPreferences opt1 = getSharedPreferences("Option", MODE_PRIVATE); // 이전거 가져오나봐 자세한건 잘 모르겠다.
-        String pattern1 = opt1.getString("patternT","0"); // 졸음감지 이후 깨우는 방법, 디폴트는 진동
+        String pattern1 = opt1.getString("patternT","0");
         if(pattern1.equals("0")){
             Intent intent = new Intent("com.google.android.gms.samples.vision.face.facetracker.pattern");
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);   // 이거 안해주면 안됨
             startActivity(intent);
         }
         refresh();
+    }
+
+    public void clickDev(View v){
+        AlertDialog.Builder ad = new AlertDialog.Builder(TabActivity.this);
+        ad.setTitle("개발자");
+        TextView tv = new TextView(TabActivity.this);
+        tv.setText("이 앱은 명지대학교 컴퓨터공학과 캡스톤디자인1을 수강하는 학생들에 의해 만들어졌습니다.");
+        ad.setView(tv);
+        ad.show();
     }
 
     public void refresh(){
@@ -129,10 +133,6 @@ public class TabActivity extends AppCompatActivity {
         tab.setVisibility(View.GONE);
         tg = (ToggleButton)findViewById(R.id.shutButton2);
         tab = (LinearLayout)findViewById(R.id.shutTab2);
-        tg.setChecked(false);
-        tab.setVisibility(View.GONE);
-        tg = (ToggleButton)findViewById(R.id.shutButton3);
-        tab = (LinearLayout)findViewById(R.id.shutTab3);
         tg.setChecked(false);
         tab.setVisibility(View.GONE);
         tg = (ToggleButton)findViewById(R.id.shutButton4);
@@ -172,12 +172,6 @@ public class TabActivity extends AppCompatActivity {
             case "흔들기":
                 tg = (ToggleButton) findViewById(R.id.shutButton2);
                 tab = (LinearLayout) findViewById(R.id.shutTab2);
-                tg.setChecked(true);
-                tab.setVisibility(View.VISIBLE);
-                break;
-            case "단순버튼":
-                tg = (ToggleButton) findViewById(R.id.shutButton3);
-                tab = (LinearLayout) findViewById(R.id.shutTab3);
                 tg.setChecked(true);
                 tab.setVisibility(View.VISIBLE);
                 break;

@@ -42,7 +42,7 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:text="테스트 공간. 이 부분에 상세설정을 넣습니다"/>
+                    android:text="앱 내에 저장된 음악소리를 이용하여 사용자를 깨워줍니다."/>
             </LinearLayout>
 
             <ToggleButton
@@ -65,7 +65,7 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:text="테스트 공간. 이 부분에 상세설정을 넣습니다"/>
+                    android:text="진동을 울려 사용자를 깨웁니다."/>
             </LinearLayout>
             <ToggleButton
                 android:id="@+id/wakeButton3"
@@ -87,7 +87,7 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:text="테스트 공간. 이 부분에 상세설정을 넣습니다"/>
+                    android:text="소름끼치는 소리를 이용해 사용자를 깨웁니다."/>
             </LinearLayout>
         </LinearLayout>
 
@@ -118,7 +118,7 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:text="테스트 공간. 이 부분에 상세설정을 넣습니다"/>
+                    android:text="사용자의 고합소리를 이용해 알람을 종료합니다.\n마이크권한이 거부되면 오류가 발생할 수 있습니다."/>
             </LinearLayout>
 `
             <ToggleButton
@@ -141,30 +141,9 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:text="테스트 공간. 이 부분에 상세설정을 넣습니다"/>
+                    android:text="스마트폰을 흔들면 알람을 종료시킬 수 있습니다."/>
             </LinearLayout>
-            <ToggleButton
-                android:id="@+id/shutButton3"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Toggle"
-                android:textOff="버튼"
-                android:textOn="버튼"
-                android:textSize="20dp"
-                android:onClick="clickSB3"/>
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:id="@+id/shutTab3"
-                android:orientation="vertical"
-                android:paddingTop="100px"
-                android:visibility="gone"
-                >
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:text="테스트 공간. 이 부분에 상세설정을 넣습니다"/>
-            </LinearLayout>
+
             <ToggleButton
                 android:id="@+id/shutButton4"
                 android:layout_width="match_parent"
@@ -185,7 +164,7 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:text="테스트 공간. 이 부분에 상세설정을 넣습니다"/>
+                    android:text="사용자가 설정한 패턴을 입력하는 것으로 알람을 종료합니다."/>
             </LinearLayout>
         </LinearLayout>
 
@@ -196,17 +175,12 @@
             android:orientation="vertical"
             android:paddingTop="100px"
             >
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="기타 설정"/>
 
             <Button
-
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="얼굴인식"
-                android:onClick="faceDetecting"/>
+                android:text="Developers"
+                android:onClick="clickDev"/>
 
         </LinearLayout>
     </FrameLayout>
