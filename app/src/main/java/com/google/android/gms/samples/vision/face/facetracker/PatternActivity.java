@@ -62,7 +62,7 @@ public class PatternActivity extends AppCompatActivity {
                     wake = opt.getString("wake","진동");
                     if(wake.equals("진동")){
                         FaceTrackerActivity.vibrator.cancel();
-                    }else if(wake.equals("음악")){
+                    }else if(wake.equals("음악") || wake.equals("귀신소리")){
                         FaceTrackerActivity.isMute = 1;
                         stopService(FaceTrackerActivity.mute);
                     }

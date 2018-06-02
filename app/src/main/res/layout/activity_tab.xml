@@ -152,7 +152,9 @@
                 android:textOff="패턴인식"
                 android:textOn="패턴인식"
                 android:textSize="20dp"
-                android:onClick="clickSB4"/>
+                android:onClick="clickSB4"
+                android:longClickable="true"
+                />
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

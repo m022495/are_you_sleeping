@@ -13,6 +13,7 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TabHost;
@@ -44,6 +45,29 @@ public class TabActivity extends AppCompatActivity {
         tabHost.addTab(spec2);
         tabHost.addTab(spec3);
         refresh();
+
+        Button pattern = (Button) findViewById(R.id.shutButton4);
+        pattern.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                SharedPreferences opt = getSharedPreferences("Option",MODE_PRIVATE);
+                SharedPreferences.Editor editor = opt.edit();
+                editor.putString("shut","패턴인식");
+                editor.commit();
+                SharedPreferences opt1 = getSharedPreferences("Option", MODE_PRIVATE); // 이전거 가져오나봐 자세한건 잘 모르겠다.
+                editor.putString("patternT","0");
+                editor.putString("pattern",null);
+                editor.commit();
+                String pattern1 = opt1.getString("patternT","0");
+                if(pattern1.equals("0")){
+                    Intent intent = new Intent("com.google.android.gms.samples.vision.face.facetracker.pattern");
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);   // 이거 안해주면 안됨
+                    startActivity(intent);
+                }
+                refresh();
+                return false;
+            }
+        });
     }
 
     public void clickWB1(View v){
