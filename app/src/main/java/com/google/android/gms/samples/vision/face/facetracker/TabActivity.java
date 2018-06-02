@@ -106,9 +106,7 @@ public class TabActivity extends AppCompatActivity {
     public void clickDev(View v){
         AlertDialog.Builder ad = new AlertDialog.Builder(TabActivity.this);
         ad.setTitle("개발자");
-        TextView tv = new TextView(TabActivity.this);
-        tv.setText("이 앱은 명지대학교 컴퓨터공학과 캡스톤디자인1을 수강하는 학생들에 의해 만들어졌습니다.");
-        ad.setView(tv);
+        ad.setMessage("이 앱은 명지대학교 컴퓨터공학과 캡스톤디자인1을 수강하는 학생들에 의해 만들어졌습니다.");
         ad.show();
     }
 
