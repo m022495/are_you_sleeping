@@ -44,14 +44,4 @@
         android:layout_alignParentLeft="true"
         android:src="@drawable/setting"
         android:onClick="startOption"/>
-
-    <ImageButton
-        android:id="@+id/captureButton"
-        android:layout_width="64dp"
-        android:layout_height="64dp"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentRight="true"
-        android:src="@android:drawable/ic_menu_camera"
-        android:scaleType="centerCrop"
-        android:onClick="captureImage"/>
 </RelativeLayout>
