@@ -10,7 +10,7 @@ public class GhostPopUp extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_ghost_pop_up);
-
+        startService(FaceTrackerActivity.mute); // 알람 시작
 
     }
 

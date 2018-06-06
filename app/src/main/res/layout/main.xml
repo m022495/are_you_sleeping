@@ -44,4 +44,12 @@
         android:layout_alignParentLeft="true"
         android:src="@drawable/setting"
         android:onClick="startOption"/>
+    <ImageButton
+        android:id="@+id/trainButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        android:src="@drawable/common_full_open_on_phone"
+        android:onClick="training"/>
 </RelativeLayout>

@@ -140,6 +140,11 @@ public final class FaceTrackerActivity extends AppCompatActivity implements Sens
     // Setting창 트리거
     private boolean isSetting = false;
 
+    //trainingmode
+    public float leftClosed;
+    public float rightClosed;
+    public boolean isTrain = false;
+    public int TCount = 0;
     /**
      * Initializes the UI and initiates the creation of a face detector.
      */
@@ -150,7 +155,8 @@ public final class FaceTrackerActivity extends AppCompatActivity implements Sens
         activity = this;
         mPreview = (CameraSourcePreview) findViewById(R.id.preview);
         mGraphicOverlay = (GraphicOverlay) findViewById(R.id.faceOverlay);
-
+        leftClosed = 0.5f;
+        rightClosed = 0.5f;
         createCameraSource();
 
         mute = new Intent(this, AlarmService.class);
@@ -258,7 +264,7 @@ public final class FaceTrackerActivity extends AppCompatActivity implements Sens
                 .setRequestedPreviewSize(320,240)
                 .setFacing(CameraSource.CAMERA_FACING_FRONT)
                 .setAutoFocusEnabled(true)
-                .setRequestedFps(10.0f)
+                .setRequestedFps(0.1f)
                 .build(); // 카메라 소스 창조.
         startNotification();
     }
@@ -352,6 +358,10 @@ public final class FaceTrackerActivity extends AppCompatActivity implements Sens
         }
     }
 
+    public void training(View view) {
+        isTrain = true;
+    }
+
     //==============================================================================================
     // Graphic Face Tracker
     //==============================================================================================
@@ -402,60 +412,86 @@ public final class FaceTrackerActivity extends AppCompatActivity implements Sens
             Log.w("count", String.valueOf(CCount) + " //" + String.valueOf(OCount));
             // 눈 감고 있고 시작 시점이 아니며 눈 감고 있는 카운트가 30 이 되면 open count는 필요 없어
             // 눈감고 있는건 3초 , 눈뜬건 6초 기준으로 잡음.
-            if (face.getIsRightEyeOpenProbability() < 0.5 && face.getIsRightEyeOpenProbability() < 0.5 && isMute == 1 && CCount == 30) {
-                CCount = CCount + 1; // 얘를 1 상승 시켜서 31으로 만듦. 0으로 만들경우 밑의 경우에 걸려
-                OCount = 0; // open카운트는 0으로 만들어버림.
-                if(wake.equals("음악") || wake.equals("귀신소리")){
-                    startService(mute); // 알람 시작
-                    if(!shut.equals("패턴인식")){
-                        Intent ghostIntent = new Intent("com.google.android.gms.samples.vision.face.facetracker.ghost");
-                        ghostIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);   // 이거 안해주면 안됨
-                        startActivity(ghostIntent);
+            if (!isTrain){
+                if (face.getIsRightEyeOpenProbability() < rightClosed && face.getIsLeftEyeOpenProbability() < leftClosed && isMute == 1 && CCount == 30) {
+                    CCount = CCount + 1; // 얘를 1 상승 시켜서 31으로 만듦. 0으로 만들경우 밑의 경우에 걸려
+                    OCount = 0; // open카운트는 0으로 만들어버림.
+                    if(wake.equals("음악") || wake.equals("귀신소리")){
+
+                        if(!shut.equals("패턴인식")){
+                            Intent ghostIntent = new Intent("com.google.android.gms.samples.vision.face.facetracker.ghost");
+                            ghostIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);   // 이거 안해주면 안됨
+                            startActivity(ghostIntent);
+                        }
+
+
+                        //dialogDecibel();
+                    }else if(wake.equals("진동")){
+                        vibrator.vibrate(pattern,0);
                     }
 
+                    if(shut.equals("소리지르기")){
+                        isRecorded = true;
+                        isThreadRun = true; // 녹음 쓰레드를 시작시키게 함.
+                        startListenAudio(); // 오디오 녹음과 데시벨 측정 시작.
+                    }else if(shut.equals("흔들기")){
+                        if (accelerormeterSensor != null)
+                            sensorManager.registerListener(sensorEventListener,accelerormeterSensor,SensorManager.SENSOR_DELAY_GAME);
+                    }else if(shut.equals("패턴인식")){
+                        Intent intent = new Intent("com.google.android.gms.samples.vision.face.facetracker.pattern");
+                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);   // 이거 안해주면 안됨
+                        startActivity(intent);
+                    }
 
-                    //dialogDecibel();
-                }else if(wake.equals("진동")){
-                    vibrator.vibrate(pattern,0);
                 }
-
-               if(shut.equals("소리지르기")){
-                   isRecorded = true;
-                   isThreadRun = true; // 녹음 쓰레드를 시작시키게 함.
-                   startListenAudio(); // 오디오 녹음과 데시벨 측정 시작.
-               }else if(shut.equals("흔들기")){
-                   if (accelerormeterSensor != null)
-                       sensorManager.registerListener(sensorEventListener,accelerormeterSensor,SensorManager.SENSOR_DELAY_GAME);
-               }else if(shut.equals("패턴인식")){
-                   Intent intent = new Intent("com.google.android.gms.samples.vision.face.facetracker.pattern");
-                   intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);   // 이거 안해주면 안됨
-                   startActivity(intent);
-               }
-
-            }
-            //눈감는 상황에는 오픈 카운트 아예 측정 안함.
-            else if (face.getIsRightEyeOpenProbability() < 0.5 && face.getIsRightEyeOpenProbability() < 0.5 && isMute == 1 && CCount < 30) {
-                CCount = CCount + 1;
-            }
-            // 눈 뜨고 있을 경우 OCount를 1 올려줌.
-            else if (face.getIsRightEyeOpenProbability() > 0.5 && face.getIsRightEyeOpenProbability() > 0.5 && isMute == 1 && CCount < 30 && OCount < 60) {
-                OCount = OCount + 1;
-            }
-            // 눈뜨는 카운터가 60이상이 될 경우 눈 감는 카운터 역시 0으로 만들어줌.
-            else if (face.getIsRightEyeOpenProbability() > 0.5 && face.getIsRightEyeOpenProbability() > 0.5 && isMute == 1 && CCount < 30 && OCount >= 60) {
-                OCount = 0;
-                CCount = 0;
-            }
-            // 처음 프로그램 시작시 혹시 켜져 있을 서비스를 꺼주고 mute를 1로 만들어줌.
-            else if (isMute == 0) {
-                stopService(mute);
-                isMute = 1;
-                if(mRecorder!=null){
-                    mRecorder.stop();
+                //눈감는 상황에는 오픈 카운트 아예 측정 안함.
+                else if (face.getIsRightEyeOpenProbability() < rightClosed && face.getIsLeftEyeOpenProbability() < leftClosed && isMute == 1 && CCount < 30) {
+                    CCount = CCount + 1;
                 }
-            } else {
+                // 눈 뜨고 있을 경우 OCount를 1 올려줌.
+                else if (face.getIsRightEyeOpenProbability() > rightClosed && face.getIsLeftEyeOpenProbability() > leftClosed && isMute == 1 && CCount < 30 && OCount < 50) {
+                    OCount = OCount + 1;
+                }
+                // 눈뜨는 카운터가 60이상이 될 경우 눈 감는 카운터 역시 0으로 만들어줌.
+                else if (face.getIsRightEyeOpenProbability() > rightClosed && face.getIsLeftEyeOpenProbability() > leftClosed && isMute == 1 && CCount < 30 && OCount >= 50) {
+                    OCount = 0;
+                    CCount = 0;
+                }
+                // 처음 프로그램 시작시 혹시 켜져 있을 서비스를 꺼주고 mute를 1로 만들어줌.
+                else if (isMute == 0) {
+                    stopService(mute);
+                    isMute = 1;
+                    if(mRecorder!=null){
+                        mRecorder.stop();
+                    }
+                } else {
 
+                }
+            }else if(isTrain){
+                if(TCount<30) {
+                    rightClosed = rightClosed + face.getIsRightEyeOpenProbability();
+                    leftClosed = leftClosed + face.getIsLeftEyeOpenProbability();
+                    TCount = TCount + 1;
+                    if(TCount == 28){
+
+                        vibrator.vibrate(200);
+                    }
+                } else if(TCount>=30) {
+                    rightClosed = rightClosed/TCount + 0.1f;
+                    leftClosed = leftClosed/TCount + 0.1f;
+                    TCount = 0;
+                    Log.d("Counts","right: " + String.valueOf(rightClosed));
+                    Log.d("Counts","left : " + String.valueOf(leftClosed));
+                    isTrain = false;
+                }
+                else{
+                    rightClosed = 0.5f;
+                    leftClosed = 0.5f;
+                    isTrain = false;
+                    TCount = 0;
+                }
             }
+
         }
 
         /**
@@ -515,9 +551,6 @@ public final class FaceTrackerActivity extends AppCompatActivity implements Sens
                         thread = null;
                     }
                 }
-                // curVal = String.valueOf(World.dbCount); // 얘는 다이어로그 용으로 넣어준거
-                //  ad.setMessage(curVal);
-                //  ad.show();
             }
         }
     };
