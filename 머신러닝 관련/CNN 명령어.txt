@@ -1,0 +1,16 @@
+데이터 셋 train
+python ./runner.py --mode=train --ckpt=./tmp/MyClassifier --data_dir=/DataSet/Object/Train --network=nn_glasses --max_steps=10000 --image_size=100 --image_crop_size=80
+
+ckpt이용한 eval폴더 검증
+python ./runner.py --mode=eval --ckpt=./tmp/MyClassifier --data_dir=C:\Users\vkdlv\Desktop\4학년1학기\특론1\CNN\CNN\DataSet\train --event_dir=./tmp/MyClassifier/Eval
+
+ckpt이용한 단일 파일 검증
+python ./runner.py --mode=single --ckpt=./tmp/MyClassifier --image=C:\Users\vkdlv\Desktop\4학년1학기\특론1\CNN\CNN\DataSet\train\0\1.jpg
+
+pb파일 추출
+python ./runner.py --mode=export --ckpt=/tmp/MyClassifier
+
+pb파일을 이용한 단일 파일 검증
+python ./runner.py --mode=pb --pb=/tmp/MyClassifier/optimized.pb --image=/DataSet/Object/Eval/0/Apple.jpg
+
+http://crystalcube.co.kr/194?category=759498 ==> 출처
