@@ -145,6 +145,8 @@ public final class FaceTrackerActivity extends AppCompatActivity implements Sens
     public float rightClosed;
     public boolean isTrain = false;
     public int TCount = 0;
+    public float tLeftClosed = 0;
+    public float tRightClosed = 0;
     /**
      * Initializes the UI and initiates the creation of a face detector.
      */
@@ -201,6 +203,8 @@ public final class FaceTrackerActivity extends AppCompatActivity implements Sens
                                 stopService(mute); //꺼줌.
                             }else if(wake.equals("진동")){
                                 vibrator.cancel();
+                            }else if(wake.equals("귀신소리")){
+                                stopService(mute);
                             }
                             CCount = 0;
                             if (sensorManager != null)
@@ -386,7 +390,7 @@ public final class FaceTrackerActivity extends AppCompatActivity implements Sens
         private GraphicOverlay mOverlay;
         private FaceGraphic mFaceGraphic;
 
-        GraphicFaceTracker(GraphicOverlay overlay) {
+                GraphicFaceTracker(GraphicOverlay overlay) {
             mOverlay = overlay;
             mFaceGraphic = new FaceGraphic(overlay);
         }
@@ -413,16 +417,19 @@ public final class FaceTrackerActivity extends AppCompatActivity implements Sens
             // 눈 감고 있고 시작 시점이 아니며 눈 감고 있는 카운트가 30 이 되면 open count는 필요 없어
             // 눈감고 있는건 3초 , 눈뜬건 6초 기준으로 잡음.
             if (!isTrain){
-                if (face.getIsRightEyeOpenProbability() < rightClosed && face.getIsLeftEyeOpenProbability() < leftClosed && isMute == 1 && CCount == 30) {
+                if(face.getIsLeftEyeOpenProbability() == -1.00 || face.getIsRightEyeOpenProbability() == -1.00) {
+
+                }
+                else if (face.getIsRightEyeOpenProbability() < rightClosed && face.getIsLeftEyeOpenProbability() < leftClosed && isMute == 1 && CCount == 30) {
                     CCount = CCount + 1; // 얘를 1 상승 시켜서 31으로 만듦. 0으로 만들경우 밑의 경우에 걸려
                     OCount = 0; // open카운트는 0으로 만들어버림.
                     if(wake.equals("음악") || wake.equals("귀신소리")){
-
-                        if(!shut.equals("패턴인식")){
-                            Intent ghostIntent = new Intent("com.google.android.gms.samples.vision.face.facetracker.ghost");
-                            ghostIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);   // 이거 안해주면 안됨
-                            startActivity(ghostIntent);
-                        }
+                        startService(FaceTrackerActivity.mute);
+//                        if(!shut.equals("패턴인식")){
+//                            Intent ghostIntent = new Intent("com.google.android.gms.samples.vision.face.facetracker.ghost");
+//                            ghostIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);   // 이거 안해주면 안됨
+//                            startActivity(ghostIntent);
+//                        }
 
 
                         //dialogDecibel();
@@ -438,9 +445,11 @@ public final class FaceTrackerActivity extends AppCompatActivity implements Sens
                         if (accelerormeterSensor != null)
                             sensorManager.registerListener(sensorEventListener,accelerormeterSensor,SensorManager.SENSOR_DELAY_GAME);
                     }else if(shut.equals("패턴인식")){
+
                         Intent intent = new Intent("com.google.android.gms.samples.vision.face.facetracker.pattern");
                         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);   // 이거 안해주면 안됨
                         startActivity(intent);
+
                     }
 
                 }
@@ -451,11 +460,22 @@ public final class FaceTrackerActivity extends AppCompatActivity implements Sens
                 // 눈 뜨고 있을 경우 OCount를 1 올려줌.
                 else if (face.getIsRightEyeOpenProbability() > rightClosed && face.getIsLeftEyeOpenProbability() > leftClosed && isMute == 1 && CCount < 30 && OCount < 50) {
                     OCount = OCount + 1;
+                    tRightClosed = tRightClosed + face.getIsRightEyeOpenProbability();
+                    tLeftClosed = tLeftClosed + face.getIsLeftEyeOpenProbability();
                 }
                 // 눈뜨는 카운터가 60이상이 될 경우 눈 감는 카운터 역시 0으로 만들어줌.
                 else if (face.getIsRightEyeOpenProbability() > rightClosed && face.getIsLeftEyeOpenProbability() > leftClosed && isMute == 1 && CCount < 30 && OCount >= 50) {
+//                    if(tRightClosed/OCount - 0.3f<0.75 && tLeftClosed/OCount - 0.3f < 0.75){
+//                        rightClosed = tRightClosed/OCount - 0.2f;
+//                        leftClosed = tLeftClosed/OCount - 0.2f;
+//                    }
                     OCount = 0;
                     CCount = 0;
+                    tRightClosed = 0;
+                    tLeftClosed = 0;
+                    Log.d("Counts","right: " + String.valueOf(rightClosed));
+                    Log.d("Counts","left : " + String.valueOf(leftClosed));
+
                 }
                 // 처음 프로그램 시작시 혹시 켜져 있을 서비스를 꺼주고 mute를 1로 만들어줌.
                 else if (isMute == 0) {
@@ -468,21 +488,46 @@ public final class FaceTrackerActivity extends AppCompatActivity implements Sens
 
                 }
             }else if(isTrain){
-                if(TCount<30) {
-                    rightClosed = rightClosed + face.getIsRightEyeOpenProbability();
-                    leftClosed = leftClosed + face.getIsLeftEyeOpenProbability();
-                    TCount = TCount + 1;
-                    if(TCount == 28){
+                if(TCount<60) {
+                    if(face.getIsLeftEyeOpenProbability() == -1.00 || face.getIsRightEyeOpenProbability() == -1.00) {
 
-                        vibrator.vibrate(200);
+                    }else{
+                        if(TCount == 0) {rightClosed = 0; leftClosed = 0;}
+                        rightClosed = rightClosed + face.getIsRightEyeOpenProbability();
+                        leftClosed = leftClosed + face.getIsLeftEyeOpenProbability();
+                        Log.d("Counts","right: " + String.valueOf(rightClosed));
+                        Log.d("Counts","left : " + String.valueOf(leftClosed));
+                        TCount = TCount + 1;
+                        if(TCount == 58){
+                            vibrator.vibrate(200);
+                        }
                     }
-                } else if(TCount>=30) {
-                    rightClosed = rightClosed/TCount + 0.1f;
-                    leftClosed = leftClosed/TCount + 0.1f;
-                    TCount = 0;
-                    Log.d("Counts","right: " + String.valueOf(rightClosed));
-                    Log.d("Counts","left : " + String.valueOf(leftClosed));
-                    isTrain = false;
+                } else if(TCount>=60) {
+                    Log.d("Counts","right: " + String.valueOf(rightClosed / TCount - 0.2));
+                    Log.d("Counts","left : " + String.valueOf(leftClosed/TCount - 0.2));
+                    rightClosed = rightClosed / TCount - 0.2f;
+                    leftClosed = leftClosed / TCount - 0.2f;
+                    if(rightClosed < 0.7 && leftClosed < 0.7){
+
+                        Log.d("Counts","right: " + String.valueOf(rightClosed));
+                        Log.d("Counts","left : " + String.valueOf(leftClosed));
+
+                        isTrain = false;
+                        TCount = 0;
+                        OCount = 0;
+                        CCount = 0;
+
+                    }else{
+                        rightClosed = 0.5f;
+                        leftClosed = 0.5f;
+
+                        TCount = 0;
+
+                        isTrain = false;
+                        OCount = 0;
+                        CCount = 0;
+                    }
+
                 }
                 else{
                     rightClosed = 0.5f;
@@ -533,7 +578,7 @@ public final class FaceTrackerActivity extends AppCompatActivity implements Sens
             super.handleMessage(msg);
             if (msg.what == 1) {
                 Log.w("decibel", String.valueOf(World.dbCount));
-                if (World.dbCount > 80) { // 데시벨이 80이상이면
+                if (World.dbCount > 90) { // 데시벨이 80이상이면
                     //  ad.cancel();
                     CCount = 0;
                     OCount = 0;
@@ -543,6 +588,9 @@ public final class FaceTrackerActivity extends AppCompatActivity implements Sens
                     }else if(wake.equals("진동")){
                         isRecorded = false;
                         vibrator.cancel();
+                    }else if(wake.equals("귀신소리")){
+                        isRecorded = false;
+                        stopService(mute);
                     }
 
 
